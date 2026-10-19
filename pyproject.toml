@@ -5,8 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "arabic-reshaper>=3.0.1",
+    "google-genai>=2.25.0",
     "openpyxl>=3.1.5",
     "pandas>=3.0.6",
+    "pdfplumber>=0.11.10",
+    "pydantic>=2.13.5",
     "pyodbc>=5.3.0",
+    "python-bidi>=0.6.11",
+    "python-dotenv>=1.2.4",
+    "sqlalchemy>=2.0.54",
+    "tqdm>=4.70.1",
     "xlsxwriter>=3.2.9",
 ]

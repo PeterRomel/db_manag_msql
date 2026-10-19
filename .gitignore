@@ -8,3 +8,11 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Secrets
+.env
+
+# Environment secrets and data files
+*.csv
+*.xlsx
+*.oxps
