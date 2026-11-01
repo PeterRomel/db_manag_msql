@@ -1,0 +1,25 @@
+8.0
+23
+1       SQLCHAR       0       41      "\t"                      1     ph_id                ""
+2       SQLCHAR       0       50      "\t"                      2     ph_name_ar           SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       50      "\t"                      3     ph_name_en           SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       15      "\t"                      4     ph_tel               SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       50      "\t"                      5     ph_owner             SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       50      "\t"                      6     ph_gm_name           SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       15      "\t"                      7     ph_owner_tel         SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       15      "\t"                      8     ph_owner_mobile      SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       15      "\t"                      9     ph_gm_tel            SQL_Latin1_General_CP1256_CI_AS
+10      SQLCHAR       0       15      "\t"                      10    ph_gm_mobile         SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       50      "\t"                      11    ph_loc               SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       50      "\t"                      12    ph_owner_address     SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       50      "\t"                      13    ph_gm_address        SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       10      "\t"                      14    ph_code              SQL_Latin1_General_CP1256_CI_AS
+15      SQLCHAR       0       100     "\t"                      15    ph_comm_no           SQL_Latin1_General_CP1256_CI_AS
+16      SQLCHAR       0       100     "\t"                      16    ph_taxcard_no        SQL_Latin1_General_CP1256_CI_AS
+17      SQLCHAR       0       50      "\t"                      17    ph_win_name          SQL_Latin1_General_CP1256_CI_AS
+18      SQLCHAR       0       21      "\t"                      18    ph_win_password      ""
+19      SQLCHAR       0       50      "\t"                      19    sec_insert_uid       SQL_Latin1_General_CP1256_CI_AS
+20      SQLCHAR       0       24      "\t"                      20    sec_insert_date      ""
+21      SQLCHAR       0       50      "\t"                      21    sec_update_uid       SQL_Latin1_General_CP1256_CI_AS
+22      SQLCHAR       0       24      "\t"                      22    sec_update_date      ""
+23      SQLCHAR       0       10      "\r\n"                    23    ph_license_num       SQL_Latin1_General_CP1256_CI_AS

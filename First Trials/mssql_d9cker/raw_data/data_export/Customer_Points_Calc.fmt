@@ -1,0 +1,9 @@
+8.0
+7
+1       SQLCHAR       0       41      "\t"                      1     cpc_cust_id         ""
+2       SQLCHAR       0       7       "\t"                      2     cpc_io_id           ""
+3       SQLCHAR       0       7       "\t"                      3     cpc_value           ""
+4       SQLCHAR       0       12      "\t"                      4     cpc_insert_uid      ""
+5       SQLCHAR       0       24      "\t"                      5     cpc_insert_date     ""
+6       SQLCHAR       0       12      "\t"                      6     cpc_update_uid      ""
+7       SQLCHAR       0       24      "\r\n"                    7     cpc_update_date     ""

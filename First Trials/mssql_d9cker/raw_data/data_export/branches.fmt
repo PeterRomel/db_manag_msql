@@ -1,0 +1,4 @@
+8.0
+2
+1       SQLCHAR       0       50      "\t"                      1     code       SQL_Latin1_General_CP1256_CI_AS
+2       SQLCHAR       0       50      "\r\n"                    2     branch     SQL_Latin1_General_CP1256_CI_AS

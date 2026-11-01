@@ -1,0 +1,11 @@
+8.0
+9
+1       SQLCHAR       0       41      "\t"                      1     fn_id               ""
+2       SQLCHAR       0       1       "\t"                      2     fn_type             SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       1       "\t"                      3     fn_who_type         SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       41      "\t"                      4     fn_who_id           ""
+5       SQLCHAR       0       30      "\t"                      5     fn_value            ""
+6       SQLCHAR       0       41      "\t"                      6     fn_cause_id         ""
+7       SQLCHAR       0       100     "\t"                      7     fn_notes            SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       50      "\t"                      8     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\r\n"                    9     sec_insert_date     ""

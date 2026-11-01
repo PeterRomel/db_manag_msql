@@ -1,0 +1,29 @@
+8.0
+27
+1       SQLCHAR       0       41      "\t"                      1     ibd_id                    ""
+2       SQLCHAR       0       41      "\t"                      2     ibd_ibh_id                ""
+3       SQLCHAR       0       41      "\t"                      3     ibd_s_id                  ""
+4       SQLCHAR       0       41      "\t"                      4     ibd_itm_id                ""
+5       SQLCHAR       0       41      "\t"                      5     ibd_c_id                  ""
+6       SQLCHAR       0       41      "\t"                      6     ibd_qty                   ""
+7       SQLCHAR       0       24      "\t"                      7     ibd_exp_date              ""
+8       SQLCHAR       0       30      "\t"                      8     ibd_pharm_price           ""
+9       SQLCHAR       0       30      "\t"                      9     ibd_tax_price             ""
+10      SQLCHAR       0       30      "\t"                      10    ibd_source_tax            ""
+11      SQLCHAR       0       41      "\t"                      11    ibd_cause_id              ""
+12      SQLCHAR       0       50      "\t"                      12    sec_insert_uid            SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       24      "\t"                      13    sec_insert_date           ""
+14      SQLCHAR       0       50      "\t"                      14    sec_update_uid            SQL_Latin1_General_CP1256_CI_AS
+15      SQLCHAR       0       24      "\t"                      15    sec_update_date           ""
+16      SQLCHAR       0       500     "\t"                      16    ibd_notes                 SQL_Latin1_General_CP1256_CI_AS
+17      SQLCHAR       0       1       "\t"                      17    ibd_web_flag              SQL_Latin1_General_CP1256_CI_AS
+18      SQLCHAR       0       30      "\t"                      18    ibd_ven_price             ""
+19      SQLCHAR       0       30      "\t"                      19    ibd_ven_tax               ""
+20      SQLCHAR       0       500     "\t"                      20    ibd_ven_notes             SQL_Latin1_General_CP1256_CI_AS
+21      SQLCHAR       0       41      "\t"                      21    ibd_nqty                  ""
+22      SQLCHAR       0       30      "\t"                      22    ibd_stk_pharm_prc         ""
+23      SQLCHAR       0       30      "\t"                      23    ibd_stk_tax_prc           ""
+24      SQLCHAR       0       7       "\t"                      24    ibd_itm_purchase_unit     ""
+25      SQLCHAR       0       7       "\t"                      25    ibd_itm_unit1_unit2       ""
+26      SQLCHAR       0       7       "\t"                      26    ibd_itm_unit1_unit3       ""
+27      SQLCHAR       0       41      "\r\n"                    27    ibd_itm_stock             ""

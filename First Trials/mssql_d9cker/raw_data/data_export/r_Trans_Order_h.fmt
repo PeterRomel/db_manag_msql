@@ -1,0 +1,14 @@
+8.0
+12
+1       SQLCHAR       0       41      "\t"                      1     toh_id              ""
+2       SQLCHAR       0       41      "\t"                      2     toh_f_sto_id        ""
+3       SQLCHAR       0       41      "\t"                      3     toh_t_sto_id        ""
+4       SQLCHAR       0       12      "\t"                      4     toh_no_items        ""
+5       SQLCHAR       0       300     "\t"                      5     toh_notes           SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       1       "\t"                      6     toh_flag            SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       41      "\t"                      7     toh_stnh_id         ""
+8       SQLCHAR       0       50      "\t"                      8     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\t"                      9     sec_insert_date     ""
+10      SQLCHAR       0       50      "\t"                      10    sec_update_uid      SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       24      "\t"                      11    sec_update_date     ""
+12      SQLCHAR       0       41      "\r\n"                    12    toh_sthp_id         ""

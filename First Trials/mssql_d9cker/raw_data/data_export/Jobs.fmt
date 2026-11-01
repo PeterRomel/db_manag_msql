@@ -1,0 +1,11 @@
+8.0
+9
+1       SQLCHAR       0       41      "\t"                      1     j_id                ""
+2       SQLCHAR       0       50      "\t"                      2     j_name_ar           SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       50      "\t"                      3     j_name_en           SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       30      "\t"                      4     j_min_salary        ""
+5       SQLCHAR       0       30      "\t"                      5     j_max_salary        ""
+6       SQLCHAR       0       50      "\t"                      6     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       24      "\t"                      7     sec_insert_date     ""
+8       SQLCHAR       0       50      "\t"                      8     sec_update_uid      SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\r\n"                    9     sec_update_date     ""

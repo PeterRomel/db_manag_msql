@@ -1,0 +1,14 @@
+8.0
+12
+1       SQLCHAR       0       12      "\t"                      1     Id                 ""
+2       SQLCHAR       0       12      "\t"                      2     CustId             ""
+3       SQLCHAR       0       50      "\t"                      3     cust_name_ar       SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       41      "\t"                      4     total              ""
+5       SQLCHAR       0       24      "\t"                      5     InvoiceDate        ""
+6       SQLCHAR       0       24      "\t"                      6     FromDate           ""
+7       SQLCHAR       0       24      "\t"                      7     ToDate             ""
+8       SQLCHAR       0       50      "\t"                      8     submissionUUID     SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       50      "\t"                      9     uuid               SQL_Latin1_General_CP1256_CI_AS
+10      SQLCHAR       0       4000    "\t"                      10    error              SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       3       "\t"                      11    IsSent             ""
+12      SQLCHAR       0       24      "\r\n"                    12    SendDate           ""

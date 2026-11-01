@@ -1,0 +1,12 @@
+8.0
+10
+1       SQLCHAR       0       41      "\t"                      1     err_id              ""
+2       SQLCHAR       0       41      "\t"                      2     ord_id              ""
+3       SQLCHAR       0       41      "\t"                      3     itm_id              ""
+4       SQLCHAR       0       50      "\t"                      4     cust_code           SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       50      "\t"                      5     branch              SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       1000    "\t"                      6     err_window          SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       2048    "\t"                      7     err_desc            SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       5000    "\t"                      8     com_txt             SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\t"                      9     sec_insert_date     ""
+10      SQLCHAR       0       50      "\r\n"                    10    sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS

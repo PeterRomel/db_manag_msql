@@ -1,0 +1,8 @@
+8.0
+6
+1       SQLCHAR       0       41      "\t"                      1     pr_id          ""
+2       SQLCHAR       0       41      "\t"                      2     pr_usr_id      ""
+3       SQLCHAR       0       100     "\t"                      3     pr_report      SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       100     "\t"                      4     pr_barcode     SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       100     "\t"                      5     pr_receipt     SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       1       "\r\n"                    6     pr_dialog      SQL_Latin1_General_CP1256_CI_AS

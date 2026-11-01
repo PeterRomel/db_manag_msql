@@ -1,0 +1,9 @@
+8.0
+7
+1       SQLCHAR       0       12      "\t"                      1     id           ""
+2       SQLCHAR       0       12      "\t"                      2     objectid     ""
+3       SQLCHAR       0       64      "\t"                      3     property     SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       255     "\t"                      4     value        SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       510     "\t"                      5     uvalue       SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       0       "\t"                      6     lvalue       ""
+7       SQLCHAR       0       12      "\r\n"                    7     version      ""

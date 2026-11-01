@@ -1,0 +1,7 @@
+8.0
+5
+1       SQLCHAR       0       2       "\t"                      1     fh_trans_type      SQL_Latin1_General_CP1256_CI_AS
+2       SQLCHAR       0       2       "\t"                      2     fh_trans_type2     SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       2       "\t"                      3     fh_from_type       SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       250     "\t"                      4     fh_notes           SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       41      "\r\n"                    5     fh_id              ""

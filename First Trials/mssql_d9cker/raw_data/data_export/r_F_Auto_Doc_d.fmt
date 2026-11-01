@@ -1,0 +1,17 @@
+8.0
+15
+1       SQLCHAR       0       41      "\t"                      1     fad_id                 ""
+2       SQLCHAR       0       41      "\t"                      2     fad_fah_id             ""
+3       SQLCHAR       0       41      "\t"                      3     fad_sto_id             ""
+4       SQLCHAR       0       12      "\t"                      4     fad_group_id           ""
+5       SQLCHAR       0       30      "\t"                      5     fad_value              ""
+6       SQLCHAR       0       41      "\t"                      6     fad_D_Account_id       ""
+7       SQLCHAR       0       50      "\t"                      7     fad_D_Account_name     SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       5       "\t"                      8     fad_D_object           SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       41      "\t"                      9     fad_D_object_id        ""
+10      SQLCHAR       0       41      "\t"                      10    fad_C_Account_id       ""
+11      SQLCHAR       0       50      "\t"                      11    fad_C_Account_name     SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       5       "\t"                      12    fad_C_object           SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       41      "\t"                      13    fad_C_object_id        ""
+14      SQLCHAR       0       50      "\t"                      14    sec_insert_uid         SQL_Latin1_General_CP1256_CI_AS
+15      SQLCHAR       0       24      "\r\n"                    15    sec_insert_date        ""

@@ -1,0 +1,16 @@
+8.0
+14
+1       SQLCHAR       0       12      "\t"                      1     vc_contract_id      ""
+2       SQLCHAR       0       41      "\t"                      2     vc_comp_id          ""
+3       SQLCHAR       0       50      "\t"                      3     vc_comp_name        SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       24      "\t"                      4     vc_start_time       ""
+5       SQLCHAR       0       24      "\t"                      5     vc_end_time         ""
+6       SQLCHAR       0       12      "\t"                      6     vc_target_id        ""
+7       SQLCHAR       0       30      "\t"                      7     vc_target_start     ""
+8       SQLCHAR       0       30      "\t"                      8     vc_target_end       ""
+9       SQLCHAR       0       41      "\t"                      9     vc_discount         ""
+10      SQLCHAR       0       24      "\t"                      10    vc_value_date       ""
+11      SQLCHAR       0       200     "\t"                      11    vc_notes            SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       12      "\t"                      12    vc_active           ""
+13      SQLCHAR       0       24      "\t"                      13    vc_sign_date        ""
+14      SQLCHAR       0       24      "\r\n"                    14    vc_insert_date      ""

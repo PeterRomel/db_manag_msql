@@ -1,0 +1,17 @@
+8.0
+15
+1       SQLCHAR       0       41      "\t"                      1     imc_id                    ""
+2       SQLCHAR       0       12      "\t"                      2     imc_year                  ""
+3       SQLCHAR       0       12      "\t"                      3     imc_month                 ""
+4       SQLCHAR       0       41      "\t"                      4     imc_sto_id                ""
+5       SQLCHAR       0       41      "\t"                      5     imc_itm_id                ""
+6       SQLCHAR       0       41      "\t"                      6     imc_qty                   ""
+7       SQLCHAR       0       30      "\t"                      7     imc_avg_pharm_price       ""
+8       SQLCHAR       0       30      "\t"                      8     imc_avg_tax               ""
+9       SQLCHAR       0       30      "\t"                      9     imc_sell_price            ""
+10      SQLCHAR       0       30      "\t"                      10    imc_pharm_price           ""
+11      SQLCHAR       0       30      "\t"                      11    imc_tax                   ""
+12      SQLCHAR       0       12      "\t"                      12    imc_itm_unit1_unit2       ""
+13      SQLCHAR       0       12      "\t"                      13    imc_itm_unit1_unit3       ""
+14      SQLCHAR       0       12      "\t"                      14    imc_itm_purchase_unit     ""
+15      SQLCHAR       0       24      "\r\n"                    15    imc_insert_date           ""

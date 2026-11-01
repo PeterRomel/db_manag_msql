@@ -1,0 +1,18 @@
+8.0
+16
+1       SQLCHAR       0       41      "\t"                      1     so_id                    ""
+2       SQLCHAR       0       50      "\t"                      2     so_code                  SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       41      "\t"                      3     so_sto_id                ""
+4       SQLCHAR       0       100     "\t"                      4     so_notes                 SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       41      "\t"                      5     so_num_of_itms           ""
+6       SQLCHAR       0       50      "\t"                      6     sec_insert_uid           SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       24      "\t"                      7     sec_insert_date          ""
+8       SQLCHAR       0       50      "\t"                      8     sec_update_uid           SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\t"                      9     sec_update_date          ""
+10      SQLCHAR       0       50      "\t"                      10    so_file_name             SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       0       "\t"                      11    so_file_path             ""
+12      SQLCHAR       0       41      "\t"                      12    so_file_No               ""
+13      SQLCHAR       0       50      "\t"                      13    so_file_Code             SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       30      "\t"                      14    so_total_sell            ""
+15      SQLCHAR       0       30      "\t"                      15    so_total_pharm_price     ""
+16      SQLCHAR       0       30      "\r\n"                    16    so_total_tax             ""

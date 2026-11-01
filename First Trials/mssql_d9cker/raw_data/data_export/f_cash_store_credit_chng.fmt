@@ -1,0 +1,10 @@
+8.0
+8
+1       SQLCHAR       0       41      "\t"                      1     ff_id              ""
+2       SQLCHAR       0       41      "\t"                      2     ff_fcs_id          ""
+3       SQLCHAR       0       30      "\t"                      3     ff_old_credit      ""
+4       SQLCHAR       0       30      "\t"                      4     ff_new_credit      ""
+5       SQLCHAR       0       200     "\t"                      5     ff_prog_name       SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       200     "\t"                      6     ff_pc_name         SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       50      "\t"                      7     ff_operation       SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       24      "\r\n"                    8     ff_insert_date     ""

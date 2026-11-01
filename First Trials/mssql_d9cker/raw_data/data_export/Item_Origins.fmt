@@ -1,0 +1,4 @@
+8.0
+2
+1       SQLCHAR       0       7       "\t"                      1     io_id          ""
+2       SQLCHAR       0       20      "\r\n"                    2     io_text_ar     SQL_Latin1_General_CP1256_CI_AS

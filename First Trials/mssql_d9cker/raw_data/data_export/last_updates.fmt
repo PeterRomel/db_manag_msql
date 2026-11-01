@@ -1,0 +1,7 @@
+8.0
+5
+1       SQLCHAR       0       41      "\t"                      1     up_id           ""
+2       SQLCHAR       0       50      "\t"                      2     type            SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       24      "\t"                      3     update_date     ""
+4       SQLCHAR       0       41      "\t"                      4     count1          ""
+5       SQLCHAR       0       41      "\r\n"                    5     ven_id          ""

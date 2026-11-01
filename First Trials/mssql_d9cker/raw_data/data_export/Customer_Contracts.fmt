@@ -1,0 +1,28 @@
+8.0
+26
+1       SQLCHAR       0       41      "\t"                      1     cc_id                            ""
+2       SQLCHAR       0       41      "\t"                      2     cc_cust_id                       ""
+3       SQLCHAR       0       25      "\t"                      3     cc_number                        SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       50      "\t"                      4     cc_name                          SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       30      "\t"                      5     cc_max_bill_value                ""
+6       SQLCHAR       0       41      "\t"                      6     cc_dis_perc                      ""
+7       SQLCHAR       0       41      "\t"                      7     cc_dis_per_for_cust              ""
+8       SQLCHAR       0       41      "\t"                      8     cc_pay_perc                      ""
+9       SQLCHAR       0       12      "\t"                      9     cc_pay_perc_rule                 ""
+10      SQLCHAR       0       41      "\t"                      10    cc_extra_discount                ""
+11      SQLCHAR       0       12      "\t"                      11    cc_active                        ""
+12      SQLCHAR       0       41      "\t"                      12    cc_local_items_disc              ""
+13      SQLCHAR       0       41      "\t"                      13    cc_imported_items_disc           ""
+14      SQLCHAR       0       41      "\t"                      14    cc_local_made_items_disc         ""
+15      SQLCHAR       0       41      "\t"                      15    cc_special_import_items_disc     ""
+16      SQLCHAR       0       41      "\t"                      16    cc_investment_items_disc         ""
+17      SQLCHAR       0       41      "\t"                      17    cc_other_items_disc              ""
+18      SQLCHAR       0       41      "\t"                      18    cc_g_p_doctor_max                ""
+19      SQLCHAR       0       12      "\t"                      19    cc_disc_rule                     ""
+20      SQLCHAR       0       50      "\t"                      20    sec_insert_uid                   SQL_Latin1_General_CP1256_CI_AS
+21      SQLCHAR       0       24      "\t"                      21    sec_insert_date                  ""
+22      SQLCHAR       0       50      "\t"                      22    sec_update_uid                   SQL_Latin1_General_CP1256_CI_AS
+23      SQLCHAR       0       24      "\t"                      23    sec_update_date                  ""
+24      SQLCHAR       0       41      "\t"                      24    cc_pay_value                     ""
+25      SQLCHAR       0       41      "\t"                      25    cc_max_pay_value                 ""
+26      SQLCHAR       0       12      "\r\n"                    26    cc_delivery_pay                  ""

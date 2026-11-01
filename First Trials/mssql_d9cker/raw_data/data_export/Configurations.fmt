@@ -1,0 +1,7 @@
+8.0
+5
+1       SQLCHAR       0       12      "\t"                      1     Id       ""
+2       SQLCHAR       0       1000    "\t"                      2     Key1     SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       1000    "\t"                      3     Key5     SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       1000    "\t"                      4     Key6     SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       1000    "\r\n"                    5     Key7     SQL_Latin1_General_CP1256_CI_AS

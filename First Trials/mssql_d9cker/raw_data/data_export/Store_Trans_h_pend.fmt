@@ -1,0 +1,17 @@
+8.0
+15
+1       SQLCHAR       0       41      "\t"                      1     sthp_id                 ""
+2       SQLCHAR       0       41      "\t"                      2     sthp_f_Sto_id           ""
+3       SQLCHAR       0       41      "\t"                      3     sthp_t_Sto_id           ""
+4       SQLCHAR       0       30      "\t"                      4     sthp_tot_sell_value     ""
+5       SQLCHAR       0       30      "\t"                      5     sthp_tot_cost_value     ""
+6       SQLCHAR       0       12      "\t"                      6     sthp_no_items           ""
+7       SQLCHAR       0       200     "\t"                      7     sthp_notes              SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       1       "\t"                      8     sthp_flag               SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       12      "\t"                      9     sthp_avg_cost           ""
+10      SQLCHAR       0       41      "\t"                      10    sthp_toh_id             ""
+11      SQLCHAR       0       41      "\t"                      11    sthp_stnh_id            ""
+12      SQLCHAR       0       41      "\t"                      12    sec_insert_uid          ""
+13      SQLCHAR       0       24      "\t"                      13    sec_insert_date         ""
+14      SQLCHAR       0       41      "\t"                      14    sec_update_uid          ""
+15      SQLCHAR       0       24      "\r\n"                    15    sec_update_date         ""

@@ -1,0 +1,11 @@
+8.0
+9
+1       SQLCHAR       0       12      "\t"                      1     branch_id            ""
+2       SQLCHAR       0       50      "\t"                      2     branch               SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       24      "\t"                      3     sec_insert_date      ""
+4       SQLCHAR       0       50      "\t"                      4     sec_insert_uid       SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       50      "\t"                      5     sec_update_uid       SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       24      "\t"                      6     sec_update_date      ""
+7       SQLCHAR       0       24      "\t"                      7     last_update_date     ""
+8       SQLCHAR       0       41      "\t"                      8     ven_id               ""
+9       SQLCHAR       0       24      "\r\n"                    9     last_ucp_update      ""

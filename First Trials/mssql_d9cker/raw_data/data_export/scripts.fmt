@@ -1,0 +1,9 @@
+8.0
+7
+1       SQLCHAR       0       41      "\t"                      1     sc_id               ""
+2       SQLCHAR       0       50      "\t"                      2     sc_user             SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       8000    "\t"                      3     sc_text             SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       12      "\t"                      4     sc_type             ""
+5       SQLCHAR       0       8000    "\t"                      5     sc_error            SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       200     "\t"                      6     sc_note             SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       24      "\r\n"                    7     sec_insert_date     ""

@@ -1,0 +1,7 @@
+8.0
+5
+1       SQLCHAR       0       12      "\t"                      1     ecs_e_id            ""
+2       SQLCHAR       0       12      "\t"                      2     ecs_sto_id          ""
+3       SQLCHAR       0       12      "\t"                      3     ecs_fcs_id          ""
+4       SQLCHAR       0       12      "\t"                      4     ecs_insert_uid      ""
+5       SQLCHAR       0       24      "\r\n"                    5     ecs_insert_date     ""

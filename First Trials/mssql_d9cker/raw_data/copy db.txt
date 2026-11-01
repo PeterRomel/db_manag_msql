@@ -1,0 +1,12 @@
+mkdir D:\Peter\data_export
+
+osql -S localhost -U sa -P "" -d Genius -w 8000 -Q "SET NOCOUNT ON; SELECT 'bcp Genius.dbo.[' + name + '] out D:\Peter\data_export\' + name + '.csv -c -t, -S localhost -U sa -P \"\"' FROM sysobjects WHERE type='U'" -h-1 -o "D:\Peter\run_bcp.bat"
+
+D:\Peter\run_bcp.bat
+
+osql -S localhost -U sa -P "" -d Genius -w 8000 -Q "SET NOCOUNT ON; SELECT 'CREATE TABLE [' + TABLE_NAME + '] (dummy_col varchar(255));' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'" -h-1 -o "D:\Peter\genius_schema.sql"
+
+
+osql -S localhost -U sa -P "" -d Genius -w 8000 -Q "SET NOCOUNT ON; SELECT 'bcp Genius.dbo.[' + name + '] format nul -c -f D:\Peter\data_export\' + name + '.fmt -S localhost -U sa -P \"\"' FROM sysobjects WHERE type='U'" -h-1 -o "D:\Peter\gen_fmt.bat"
+
+D:\Peter\gen_fmt.bat

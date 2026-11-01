@@ -1,0 +1,24 @@
+8.0
+22
+1       SQLCHAR       0       41      "\t"                      1     se_id                           ""
+2       SQLCHAR       0       50      "\t"                      2     se_name                         SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       1       "\t"                      3     se_active                       SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       1       "\t"                      4     se_enabled                      SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       33      "\t"                      5     se_job_id                       ""
+6       SQLCHAR       0       50      "\t"                      6     sec_insert_uid                  SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       24      "\t"                      7     sec_insert_date                 ""
+8       SQLCHAR       0       50      "\t"                      8     sec_update_uid                  SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\t"                      9     sec_update_date                 ""
+10      SQLCHAR       0       24      "\t"                      10    at_time                         ""
+11      SQLCHAR       0       12      "\t"                      11    every_int                       ""
+12      SQLCHAR       0       12      "\t"                      12    no_of_days                      ""
+13      SQLCHAR       0       24      "\t"                      13    se_datefrom                     ""
+14      SQLCHAR       0       24      "\t"                      14    se_dateto                       ""
+15      SQLCHAR       0       8000    "\t"                      15    se_selected_customers           SQL_Latin1_General_CP1256_CI_AS
+16      SQLCHAR       0       12      "\t"                      16    se_every_no_of_days             ""
+17      SQLCHAR       0       12      "\t"                      17    se_every_no_of_weeks            ""
+18      SQLCHAR       0       12      "\t"                      18    se_every_weekday                ""
+19      SQLCHAR       0       12      "\t"                      19    se_every_month_crteria          ""
+20      SQLCHAR       0       12      "\t"                      20    se_every_daymonth               ""
+21      SQLCHAR       0       12      "\t"                      21    se_every_no_of_months           ""
+22      SQLCHAR       0       12      "\r\n"                    22    se_every_month_week_day_pos     ""

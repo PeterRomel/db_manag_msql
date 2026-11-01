@@ -1,0 +1,17 @@
+8.0
+15
+1       SQLCHAR       0       41      "\t"                      1     svc_id                  ""
+2       SQLCHAR       0       41      "\t"                      2     svc_sto_id              ""
+3       SQLCHAR       0       41      "\t"                      3     svc_itm_id              ""
+4       SQLCHAR       0       41      "\t"                      4     svc_c_id                ""
+5       SQLCHAR       0       30      "\t"                      5     svc_old_pharm_price     ""
+6       SQLCHAR       0       30      "\t"                      6     svc_old_tax_price       ""
+7       SQLCHAR       0       30      "\t"                      7     svc_new_pharm_price     ""
+8       SQLCHAR       0       30      "\t"                      8     svc_new_tax_price       ""
+9       SQLCHAR       0       41      "\t"                      9     svc_sth_id              ""
+10      SQLCHAR       0       24      "\t"                      10    sec_insert_date         ""
+11      SQLCHAR       0       50      "\t"                      11    sec_insert_uid          SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       24      "\t"                      12    sec_update_date         ""
+13      SQLCHAR       0       50      "\t"                      13    sec_update_uid          SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       41      "\t"                      14    svc_curr_qnty           ""
+15      SQLCHAR       0       41      "\r\n"                    15    svc_itm_unit            ""

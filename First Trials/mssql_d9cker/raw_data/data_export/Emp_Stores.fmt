@@ -1,0 +1,9 @@
+8.0
+7
+1       SQLCHAR       0       41      "\t"                      1     es_e_id             ""
+2       SQLCHAR       0       41      "\t"                      2     es_sto_id           ""
+3       SQLCHAR       0       50      "\t"                      3     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       24      "\t"                      4     sec_insert_date     ""
+5       SQLCHAR       0       50      "\t"                      5     sec_update_uid      SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       24      "\t"                      6     sec_update_date     ""
+7       SQLCHAR       0       3       "\r\n"                    7     es_readOnly         ""

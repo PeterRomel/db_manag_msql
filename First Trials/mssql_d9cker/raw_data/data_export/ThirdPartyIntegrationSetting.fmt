@@ -1,0 +1,6 @@
+8.0
+4
+1       SQLCHAR       0       12      "\t"                      1     Id            ""
+2       SQLCHAR       0       500     "\t"                      2     Parameter     SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       500     "\t"                      3     Value         SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       500     "\r\n"                    4     Type          SQL_Latin1_General_CP1256_CI_AS

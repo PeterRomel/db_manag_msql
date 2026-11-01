@@ -1,0 +1,18 @@
+8.0
+16
+1       SQLCHAR       0       41      "\t"                      1     sr_id                       ""
+2       SQLCHAR       0       41      "\t"                      2     sth_id                      ""
+3       SQLCHAR       0       12      "\t"                      3     returned_items_no           ""
+4       SQLCHAR       0       30      "\t"                      4     returned_items_value        ""
+5       SQLCHAR       0       12      "\t"                      5     new_items_no                ""
+6       SQLCHAR       0       30      "\t"                      6     new_items_value             ""
+7       SQLCHAR       0       41      "\t"                      7     sec_insert_uid              ""
+8       SQLCHAR       0       24      "\t"                      8     sec_insert_date             ""
+9       SQLCHAR       0       41      "\t"                      9     sec_update_uid              ""
+10      SQLCHAR       0       24      "\t"                      10    sec_update_date             ""
+11      SQLCHAR       0       100     "\t"                      11    UUID                        SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       100     "\t"                      12    SubmissionId                SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       24      "\t"                      13    SendDate                    ""
+14      SQLCHAR       0       30      "\t"                      14    sth_extra_expenses_back     ""
+15      SQLCHAR       0       41      "\t"                      15    total_back_tax              ""
+16      SQLCHAR       0       41      "\r\n"                    16    isvalid                     ""

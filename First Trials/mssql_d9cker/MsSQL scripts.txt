@@ -1,0 +1,44 @@
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Emma@2015" \
+   -p 1433:1433 --name pharmacy_db \
+   -v ~/Desktop/mssql_data:/var/opt/mssql/data \
+   -d mcr.microsoft.com/mssql/server:2022-latest
+
+
+docker exec -i pharmacy_db /opt/mssql-tools18/bin/sqlcmd \
+   -S localhost -U sa -P "Emma@2015" -C \
+   -Q "CREATE DATABASE Genius;"
+   
+   
+docker cp ~/Desktop/mssql_data/raw_data/data_export pharmacy_db:/tmp/raw_data
+
+cat << 'EOF' > ~/import_data.py
+import os, glob, subprocess
+
+fmt_files = glob.glob('/tmp/raw_data/*.fmt')
+
+for fmt in fmt_files:
+    table = os.path.basename(fmt).replace('.fmt', '')
+    csv_file = f'/tmp/raw_data/{table}.csv'
+    
+    if not os.path.exists(csv_file):
+        continue
+
+    with open(fmt, 'r') as f:
+        lines = [l.strip() for l in f.readlines() if l.strip()]
+    
+    num_cols = int(lines[1]) if len(lines) > 1 else 0
+    if num_cols == 0:
+        continue
+
+    cols = [f"[col_{i}] NVARCHAR(MAX)" for i in range(1, num_cols + 1)]
+    cols_str = ", ".join(cols)
+    create_sql = f'IF OBJECT_ID(\'dbo.[{table}]\', \'U\') IS NULL CREATE TABLE dbo.[{table}] ({cols_str});'
+    
+    cmd_sql = f'/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Emma@2015" -d Genius -C -Q "{create_sql}"'
+    subprocess.run(cmd_sql, shell=True)
+
+    cmd_bcp = f'/opt/mssql-tools18/bin/bcp "Genius.dbo.[{table}]" in "{csv_file}" -c -t, -S localhost -U sa -P "Emma@2015" -F 1 -C 65001'
+    subprocess.run(cmd_bcp, shell=True)
+EOF
+
+docker cp ~/import_data.py pharmacy_db:/tmp/import_data.py

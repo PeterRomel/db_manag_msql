@@ -1,0 +1,29 @@
+8.0
+27
+1       SQLCHAR       0       41      "\t"                      1     c_usr_id               ""
+2       SQLCHAR       0       41      "\t"                      2     c_id                   ""
+3       SQLCHAR       0       41      "\t"                      3     c_order_id             ""
+4       SQLCHAR       0       1001    "\t"                      4     c_text_ar              ""
+5       SQLCHAR       0       50      "\t"                      5     c_text_en              SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       50      "\t"                      6     c_name                 SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       50      "\t"                      7     c_desc_ar              SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       50      "\t"                      8     c_desc_en              SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       1001    "\t"                      9     c_form                 ""
+10      SQLCHAR       0       1       "\t"                      10    c_type                 SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       12      "\t"                      11    c_parent               ""
+12      SQLCHAR       0       50      "\t"                      12    c_shortcut             SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       50      "\t"                      13    c_shortcut2            SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       12      "\t"                      14    c_visible              ""
+15      SQLCHAR       0       12      "\t"                      15    c_checked              ""
+16      SQLCHAR       0       12      "\t"                      16    c_dialog               ""
+17      SQLCHAR       0       5       "\t"                      17    c_controls             SQL_Latin1_General_CP1256_CI_AS
+18      SQLCHAR       0       5       "\t"                      18    c_allowed_controls     SQL_Latin1_General_CP1256_CI_AS
+19      SQLCHAR       0       12      "\t"                      19    c_favourite            ""
+20      SQLCHAR       0       12      "\t"                      20    c_auto_open            ""
+21      SQLCHAR       0       50      "\t"                      21    c_image                SQL_Latin1_General_CP1256_CI_AS
+22      SQLCHAR       0       50      "\t"                      22    sec_insert_uid         SQL_Latin1_General_CP1256_CI_AS
+23      SQLCHAR       0       24      "\t"                      23    sec_insert_date        ""
+24      SQLCHAR       0       50      "\t"                      24    sec_update_uid         SQL_Latin1_General_CP1256_CI_AS
+25      SQLCHAR       0       24      "\t"                      25    sec_update_date        ""
+26      SQLCHAR       0       12      "\t"                      26    c_report               ""
+27      SQLCHAR       0       16001   "\r\n"                    27    c_text_page_en         ""

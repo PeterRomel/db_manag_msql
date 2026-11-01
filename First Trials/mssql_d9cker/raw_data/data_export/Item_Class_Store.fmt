@@ -1,0 +1,16 @@
+8.0
+14
+1       SQLCHAR       0       41      "\t"                      1     c_id                ""
+2       SQLCHAR       0       41      "\t"                      2     itm_id              ""
+3       SQLCHAR       0       41      "\t"                      3     sto_id              ""
+4       SQLCHAR       0       41      "\t"                      4     ven_id              ""
+5       SQLCHAR       0       41      "\t"                      5     itm_qty             ""
+6       SQLCHAR       0       30      "\t"                      6     pharm_price         ""
+7       SQLCHAR       0       30      "\t"                      7     sell_price          ""
+8       SQLCHAR       0       30      "\t"                      8     sell_tax            ""
+9       SQLCHAR       0       24      "\t"                      9     itm_expiry_date     ""
+10      SQLCHAR       0       41      "\t"                      10    itm_location        ""
+11      SQLCHAR       0       50      "\t"                      11    sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       24      "\t"                      12    sec_insert_date     ""
+13      SQLCHAR       0       50      "\t"                      13    sec_update_uid      SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       24      "\r\n"                    14    sec_update_date     ""

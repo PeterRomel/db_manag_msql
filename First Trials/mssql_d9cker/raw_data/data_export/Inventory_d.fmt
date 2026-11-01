@@ -1,0 +1,26 @@
+8.0
+24
+1       SQLCHAR       0       41      "\t"                      1     invd_id                    ""
+2       SQLCHAR       0       41      "\t"                      2     invd_inv_id                ""
+3       SQLCHAR       0       41      "\t"                      3     invd_itm_id                ""
+4       SQLCHAR       0       41      "\t"                      4     invd_c_id                  ""
+5       SQLCHAR       0       12      "\t"                      5     invd_itm_unit              ""
+6       SQLCHAR       0       41      "\t"                      6     invd_old_qty               ""
+7       SQLCHAR       0       41      "\t"                      7     invd_new_qty               ""
+8       SQLCHAR       0       24      "\t"                      8     invd_old_exp_date          ""
+9       SQLCHAR       0       24      "\t"                      9     invd_new_exp_date          ""
+10      SQLCHAR       0       30      "\t"                      10    invd_sell_price            ""
+11      SQLCHAR       0       30      "\t"                      11    invd_pharm_price           ""
+12      SQLCHAR       0       30      "\t"                      12    invd_tax                   ""
+13      SQLCHAR       0       50      "\t"                      13    sec_insert_uid             SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       24      "\t"                      14    sec_insert_date            ""
+15      SQLCHAR       0       50      "\t"                      15    sec_update_uid             SQL_Latin1_General_CP1256_CI_AS
+16      SQLCHAR       0       24      "\t"                      16    sec_update_date            ""
+17      SQLCHAR       0       12      "\t"                      17    invd_itm_purchase_unit     ""
+18      SQLCHAR       0       12      "\t"                      18    invd_itm_unit1_unit2       ""
+19      SQLCHAR       0       12      "\t"                      19    invd_itm_unit1_unit3       ""
+20      SQLCHAR       0       41      "\t"                      20    invd_itm_stock             ""
+21      SQLCHAR       0       50      "\t"                      21    invd_batch_no_old          SQL_Latin1_General_CP1256_CI_AS
+22      SQLCHAR       0       100     "\t"                      22    invd_serial_number_old     SQL_Latin1_General_CP1256_CI_AS
+23      SQLCHAR       0       50      "\t"                      23    invd_batch_no_new          SQL_Latin1_General_CP1256_CI_AS
+24      SQLCHAR       0       100     "\r\n"                    24    invd_serial_number_new     SQL_Latin1_General_CP1256_CI_AS

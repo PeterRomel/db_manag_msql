@@ -1,0 +1,11 @@
+8.0
+9
+1       SQLCHAR       0       41      "\t"                      1     ve_id               ""
+2       SQLCHAR       0       41      "\t"                      2     ve_ven_id           ""
+3       SQLCHAR       0       50      "\t"                      3     ve_tel              SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       50      "\t"                      4     ve_address          SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       50      "\t"                      5     ve_contact_name     SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       50      "\t"                      6     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       24      "\t"                      7     sec_insert_date     ""
+8       SQLCHAR       0       50      "\t"                      8     sec_update_uid      SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\r\n"                    9     sec_update_date     ""

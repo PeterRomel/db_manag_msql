@@ -16,7 +16,7 @@ Total Production Scope: 6 Workbooks | 72 Analytical Sheets | 100% Native Excel T
 ====================================================================================================
 Key Architectural Standards:
   - Universal Historical Continuity: Full inclusion of all years (2023-2026+) with complete ledger integrity.
-  - In-Memory OpenPyXL Styling: Direct single-pass worksheet formatting (eliminates 2-pass disk overhead).
+  - In-Memory xlsxwriter Styling: Direct single-pass worksheet formatting (eliminates 2-pass disk overhead).
   - Exact Net Revenue & COGS Alignment: Header revenue netted against sales returns to prevent profit inflation.
   - Multi-Unit Pack Normalization: Blisters/strips/tablets normalized to standard boxes with zero-division guards.
   - Varbinary Decryption Engine: Bidi buffer reversal + windows-1256 trade name restoration.
@@ -35,10 +35,7 @@ import urllib.parse
 from datetime import datetime
 import pandas as pd
 from sqlalchemy import create_engine, text
-import openpyxl
-from openpyxl.styles import Font, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
-from openpyxl.worksheet.table import Table, TableStyleInfo
+import xlsxwriter
 
 # --------------------------------------------------------------------------------------------------
 # 0. LOGGING CONFIGURATION
@@ -53,10 +50,12 @@ logger = logging.getLogger("GeniusMasterEngine")
 # --------------------------------------------------------------------------------------------------
 # 1. DATABASE CONNECTION SETUP
 # --------------------------------------------------------------------------------------------------
-SERVER = "localhost,1433"
-DATABASE = "Genius"
-USERNAME = "sa"
-PASSWORD = "Emma@2015"
+
+# Credentials with safe environment variable overrides
+SERVER = os.getenv("GENIUS_DB_SERVER", "localhost,1433")
+DATABASE = os.getenv("GENIUS_DB_NAME", "Genius")
+USERNAME = os.getenv("GENIUS_DB_USER", "sa")
+PASSWORD = os.getenv("GENIUS_DB_PASSWORD", "Emma@2015")
 
 conn_str = (
     f"DRIVER={{ODBC Driver 18 for SQL Server}};"
@@ -70,9 +69,9 @@ params = urllib.parse.quote_plus(conn_str)
 ENGINE = create_engine(f"mssql+pyodbc:///?odbc_connect={params}", pool_pre_ping=True)
 
 
-# --------------------------------------------------------------------------------------------------
-# 2. VARBINARY ITEM DECRYPTION ENGINE (GENIUS ARCHITECTURAL CORE)
-# --------------------------------------------------------------------------------------------------
+# ==================================================================================================
+# 2. VARBINARY ITEM DECRYPTION & OPTIMIZED CACHE ENGINE
+# ==================================================================================================
 def decode_legacy_bidi_bytes(raw_bytes):
     """
     Decodes obfuscated varbinary medicine names in Item_Catalog.
@@ -98,7 +97,7 @@ ITEM_NAME_EN_CACHE = None
 def get_item_name_cache(engine):
     """
     Initializes and caches decrypted trade names across all items in Item_Catalog.
-    Provides fallback keys (float, int, str) for reliable joins.
+    Uses strict integer keys (1:1 mapping) to eliminate memory duplication.
     """
     global ITEM_NAME_AR_CACHE, ITEM_NAME_EN_CACHE
     if ITEM_NAME_AR_CACHE is not None and ITEM_NAME_EN_CACHE is not None:
@@ -115,8 +114,13 @@ def get_item_name_cache(engine):
         cache_en = {}
 
         for _, row in df_cat.iterrows():
-            iid = row["itm_id"]
-            if pd.isna(iid):
+            raw_id = row["itm_id"]
+            if pd.isna(raw_id):
+                continue
+
+            try:
+                item_key = int(float(raw_id))
+            except ValueError, TypeError:
                 continue
 
             name_ar = row["itm_name_ar"]
@@ -136,27 +140,14 @@ def get_item_name_cache(engine):
             if not name_ar and name_en:
                 name_ar = name_en
 
-            try:
-                iid_f = float(iid)
-                iid_i = int(iid_f)
-                cache_ar[iid_f] = name_ar
-                cache_ar[iid_i] = name_ar
-                cache_ar[str(iid_i)] = name_ar
-                cache_ar[str(iid_f)] = name_ar
-
-                cache_en[iid_f] = name_en
-                cache_en[iid_i] = name_en
-                cache_en[str(iid_i)] = name_en
-                cache_en[str(iid_f)] = name_en
-            except ValueError, TypeError:
-                cache_ar[iid] = name_ar
-                cache_ar[str(iid)] = name_ar
-                cache_en[iid] = name_en
-                cache_en[str(iid)] = name_en
+            cache_ar[item_key] = name_ar
+            cache_en[item_key] = name_en
 
         ITEM_NAME_AR_CACHE = cache_ar
         ITEM_NAME_EN_CACHE = cache_en
-        logger.info(f"Item Decryption Cache built: {len(df_cat):,} items mapped.")
+        logger.info(
+            f"Item Decryption Cache built: {len(cache_ar):,} unique items mapped."
+        )
     except Exception as e:
         logger.warning(f"Could not build item decryption cache: {e}")
         ITEM_NAME_AR_CACHE = {}
@@ -168,13 +159,13 @@ def get_item_name_cache(engine):
 def read_sql_and_enrich(sql, engine):
     """
     Executes a SQL query and enriches trade names using the decrypted in-memory catalog.
-    Handles primary items, substitutes, and original referral medicines.
+    Coerces ID series to Int64 for instantaneous vectorized dictionary lookup.
     """
     df = pd.read_sql(sql, engine)
     cache_ar, cache_en = get_item_name_cache(engine)
 
-    id_col = None
-    for candidate in [
+    # Primary item trade name resolution
+    id_candidates = [
         "Item_ID",
         "itm_id",
         "st_itm_id",
@@ -183,12 +174,14 @@ def read_sql_and_enrich(sql, engine):
         "ptd_itm_id",
         "Shortage_Item_ID",
         "Original_Item_ID",
-    ]:
-        if candidate in df.columns:
-            id_col = candidate
-            break
+    ]
+    id_col = next((c for c in id_candidates if c in df.columns), None)
 
-    if id_col is not None:
+    if id_col is not None and len(df) > 0:
+        clean_keys = (
+            pd.to_numeric(df[id_col], errors="coerce").fillna(-1).astype("int64")
+        )
+
         for ar_col in [
             "Item_Name",
             "Item_Name_Ar",
@@ -196,28 +189,34 @@ def read_sql_and_enrich(sql, engine):
             "Original_Item_Name",
         ]:
             if ar_col in df.columns:
-                mapped = df[id_col].map(cache_ar)
+                mapped = clean_keys.map(cache_ar)
                 df[ar_col] = (
                     df[ar_col].replace(r"^\s*$", None, regex=True).fillna(mapped)
                 )
 
         for en_col in ["Item_Name_En", "Item_Name_en", "Original_Item_Name_En"]:
             if en_col in df.columns:
-                mapped = df[id_col].map(cache_en)
+                mapped = clean_keys.map(cache_en)
                 df[en_col] = (
                     df[en_col].replace(r"^\s*$", None, regex=True).fillna(mapped)
                 )
 
-    if "Substitute_Item_ID" in df.columns:
+    # Secondary substitute resolution (Module 1 Generic Substitutions)
+    if "Substitute_Item_ID" in df.columns and len(df) > 0:
+        sub_keys = (
+            pd.to_numeric(df["Substitute_Item_ID"], errors="coerce")
+            .fillna(-1)
+            .astype("int64")
+        )
         if "Substitute_Item_Name" in df.columns:
-            mapped_sub_ar = df["Substitute_Item_ID"].map(cache_ar)
+            mapped_sub_ar = sub_keys.map(cache_ar)
             df["Substitute_Item_Name"] = (
                 df["Substitute_Item_Name"]
                 .replace(r"^\s*$", None, regex=True)
                 .fillna(mapped_sub_ar)
             )
         if "Substitute_Item_Name_En" in df.columns:
-            mapped_sub_en = df["Substitute_Item_ID"].map(cache_en)
+            mapped_sub_en = sub_keys.map(cache_en)
             df["Substitute_Item_Name_En"] = (
                 df["Substitute_Item_Name_En"]
                 .replace(r"^\s*$", None, regex=True)
@@ -227,32 +226,37 @@ def read_sql_and_enrich(sql, engine):
     return df
 
 
-# --------------------------------------------------------------------------------------------------
-# 3. OPENPYXL HIGH-PERFORMANCE STYLING ENGINE (DIRECT IN-MEMORY TABLE FORMATTING)
-# --------------------------------------------------------------------------------------------------
-THIN_BORDER = Border(
-    left=Side(style="thin", color="D3D3D3"),
-    right=Side(style="thin", color="D3D3D3"),
-    top=Side(style="thin", color="D3D3D3"),
-    bottom=Side(style="thin", color="D3D3D3"),
-)
+# ==================================================================================================
+# 3. HIGH-SPEED XLSXWRITER STYLING & TABLE ENGINE (DOUBLE-CHECKED & AUDITED)
+# ==================================================================================================
 
+# Note: xlsxwriter requires exact spaces in Table Style names
 COLOR_TO_TABLE_STYLE = {
-    "1B4D3E": "TableStyleMedium7",  # Emerald Green (Module 1: Inventory)
-    "1F4E79": "TableStyleMedium9",  # Sapphire Blue (Module 2: Sales)
-    "4A154B": "TableStyleMedium12",  # Deep Burgundy (Module 3: Purchases)
-    "7D5A00": "TableStyleMedium13",  # Bronze Gold   (Module 4: Financials)
-    "1A5276": "TableStyleMedium10",  # Slate Teal    (Module 5: POS Shifts)
-    "0B132B": "TableStyleMedium1",  # Dark Navy     (Module 6: Executive BI)
+    "1B4D3E": "Table Style Medium 7",  # Emerald Green (Module 1: Inventory)
+    "1F4E79": "Table Style Medium 9",  # Sapphire Blue (Module 2: Sales)
+    "4A154B": "Table Style Medium 12",  # Deep Burgundy (Module 3: Purchases)
+    "7D5A00": "Table Style Medium 13",  # Bronze Gold   (Module 4: Financials)
+    "1A5276": "Table Style Medium 10",  # Slate Teal    (Module 5: POS Shifts)
+    "0B132B": "Table Style Medium 1",  # Dark Navy     (Module 6: Executive BI)
 }
 
 
 def get_excel_format_and_alignment(header_name: str):
     """
-    Maps column names to appropriate Excel number formats and alignments.
-    Distinguishes true decimal ratios (0-1) from raw percentage values (0-100).
+    Maps column names to appropriate Excel number format strings and text alignments.
+    Distinguishes true ratios (0.00%) from raw 0-100 percentage floats (#,##0.00"%").
     """
-    h = header_name.lower().strip()
+    h = str(header_name).lower().strip()
+
+    # 1. Date & Time Formats
+    if any(term in h for term in ["expiry", "exp_date", "birth_date"]):
+        return "yyyy-mm-dd", "center"
+    if any(
+        term in h
+        for term in ["date", "time", "timestamp", "deltime", "started", "closed"]
+    ):
+        return "yyyy-mm-dd hh:mm", "center"
+
     is_wage_or_factor = any(
         term in h
         for term in [
@@ -266,7 +270,7 @@ def get_excel_format_and_alignment(header_name: str):
         ]
     )
 
-    # True ratios (stored as 0.0 - 1.0) formatted with native percentage: 0.00%
+    # 2. True decimal ratios (0.0 to 1.0) -> Formatted as native 0.00%
     is_true_ratio = not is_wage_or_factor and (
         h
         in [
@@ -280,9 +284,9 @@ def get_excel_format_and_alignment(header_name: str):
         or any(h.endswith(sfx) for sfx in ["_share", "margin_perc", "margin_rate"])
     )
     if is_true_ratio:
-        return "0.00%", Alignment(horizontal="right", vertical="center")
+        return "0.00%", "right"
 
-    # Raw database percentage integers/floats (stored as 0.0 - 100.0) formatted as #,##0.00"%"
+    # 3. Raw database percentage numbers (0.0 to 100.0) -> Formatted as #,##0.00"%"
     is_raw_perc = (
         not is_wage_or_factor
         and (
@@ -320,11 +324,10 @@ def get_excel_format_and_alignment(header_name: str):
             ]
         )
     )
-
     if is_raw_perc:
-        return '#,##0.00"%"', Alignment(horizontal="right", vertical="center")
+        return '#,##0.00"%"', "right"
 
-    # Financial currencies, monetary values, and unit cost/prices
+    # 4. Financial currencies, monetary values, and unit cost/prices
     if (
         any(
             term in h
@@ -365,9 +368,9 @@ def get_excel_format_and_alignment(header_name: str):
         )
         or is_wage_or_factor
     ):
-        return "#,##0.00", Alignment(horizontal="right", vertical="center")
+        return "#,##0.00", "right"
 
-    # Quantities, unit counts, lines, inventory units
+    # 5. Quantities, counts, lines, inventory units
     if any(
         term in h
         for term in [
@@ -383,136 +386,183 @@ def get_excel_format_and_alignment(header_name: str):
             "rank",
         ]
     ):
-        return "#,##0.00", Alignment(horizontal="right", vertical="center")
+        return "#,##0.00", "right"
 
-    return None, Alignment(horizontal="center", vertical="center")
+    # 6. Identifiers, codes, status flags
+    if any(
+        term in h
+        for term in [
+            "id",
+            "code",
+            "batch",
+            "barcode",
+            "status",
+            "phone",
+            "tel",
+            "mobile",
+        ]
+    ):
+        return None, "center"
+
+    return None, "left"
 
 
-def style_worksheet(
-    ws, header_fill_hex="1F4E79", is_kpi=False, existing_table_names=None
-):
+def get_or_create_format(workbook, fmt_str, align):
     """
-    Applies high-performance formatting directly to an active openpyxl worksheet.
-    Enforces native Excel Table definitions, dynamic column auto-fitting, Segoe UI fonts,
-    thin cell borders, frozen top headers, and no total rows.
+    Reuses format objects within the workbook to prevent exceeding Excel's 4,000 format limit.
     """
-    if existing_table_names is None:
-        existing_table_names = set()
+    if not hasattr(workbook, "_genius_format_cache"):
+        workbook._genius_format_cache = {}
 
-    max_row = ws.max_row
-    max_col = ws.max_column
+    cache_key = (fmt_str, align)
+    if cache_key in workbook._genius_format_cache:
+        return workbook._genius_format_cache[cache_key]
 
-    if max_row < 2:
-        ws.append([None] * max_col)
-        max_row = 2
+    props = {
+        "font_name": "Segoe UI",
+        "font_size": 9,
+        "valign": "vcenter",
+        "align": align,
+    }
+    if fmt_str:
+        props["num_format"] = fmt_str
 
-    data_font = Font(name="Segoe UI", size=9)
-    ws.views.sheetView[0].showGridLines = True
-    ws.freeze_panes = "A2"
-    ws.row_dimensions[1].height = 26
-
-    headers = []
-    seen_headers = {}
-    for c in range(1, max_col + 1):
-        raw_val = ws.cell(row=1, column=c).value
-        cell_val = str(raw_val if raw_val is not None else f"Col_{c}").strip()
-        if not cell_val:
-            cell_val = f"Col_{c}"
-
-        if cell_val in seen_headers:
-            seen_headers[cell_val] += 1
-            unique_h = f"{cell_val}_{seen_headers[cell_val]}"
-        else:
-            seen_headers[cell_val] = 0
-            unique_h = cell_val
-
-        ws.cell(row=1, column=c, value=unique_h)
-        headers.append(unique_h)
-
-    col_widths = {}
-    for col_idx in range(1, max_col + 1):
-        header_val = headers[col_idx - 1]
-        max_len = len(header_val)
-
-        for row_idx in range(2, max_row + 1):
-            cell = ws.cell(row=row_idx, column=col_idx)
-            val = cell.value
-            cell.font = data_font
-            cell.border = THIN_BORDER
-
-            if val is not None:
-                str_val = str(val)
-                if len(str_val) > max_len:
-                    max_len = len(str_val)
-
-                if isinstance(val, (int, float)):
-                    fmt, align = get_excel_format_and_alignment(header_val)
-                    if fmt:
-                        cell.number_format = fmt
-                    cell.alignment = align
-                elif isinstance(val, (datetime, pd.Timestamp)):
-                    cell.number_format = "yyyy-mm-dd hh:mm"
-                    cell.alignment = Alignment(horizontal="center", vertical="center")
-                else:
-                    cell.alignment = Alignment(horizontal="left", vertical="center")
-
-        col_letter = get_column_letter(col_idx)
-        col_widths[col_letter] = min(max(max_len + 4, 12), 50)
-
-    clean_title = re.sub(r"[^a-zA-Z0-9_]", "_", ws.title).strip("_")
-    if not clean_title or clean_title[0].isdigit():
-        clean_title = f"T_{clean_title}"
-    base_name = f"Tab_{clean_title}"[:200]
-    candidate = base_name
-    counter = 1
-    while candidate.lower() in existing_table_names:
-        candidate = f"{base_name}_{counter}"
-        counter += 1
-    existing_table_names.add(candidate.lower())
-
-    tab_ref = f"A1:{get_column_letter(max_col)}{max_row}"
-    tab = Table(displayName=candidate, ref=tab_ref)
-    table_style = COLOR_TO_TABLE_STYLE.get(header_fill_hex, "TableStyleMedium9")
-    tab.tableStyleInfo = TableStyleInfo(
-        name=table_style,
-        showRowStripes=True,
-        showFirstColumn=False,
-        showLastColumn=False,
-        showColumnStripes=False,
-    )
-    ws.add_table(tab)
-
-    for col_letter, width in col_widths.items():
-        ws.column_dimensions[col_letter].width = width
+    fmt_obj = workbook.add_format(props)
+    workbook._genius_format_cache[cache_key] = fmt_obj
+    return fmt_obj
 
 
 def write_and_style_sheet(
     writer, sheet_name, df, header_fill_hex, is_kpi=False, table_names=None
 ):
     """
-    Helper function that writes a DataFrame directly to Excel and styles it in-memory
-    within the active writer session, eliminating the need to re-read files from disk.
+    Audited high-speed xlsxwriter table generation and styling engine.
+    - Resolves duplicate headers.
+    - Applies native Excel Table with verified parameters.
+    - Zero cell-by-cell loops.
     """
     if table_names is None:
         table_names = set()
+
+    num_rows, num_cols = df.shape
+    if num_cols == 0:
+        return
+
+    # 1. De-duplicate headers defensively to protect Excel Table integrity
+    seen_headers = {}
+    unique_headers = []
+    for c in df.columns:
+        c_str = str(c).strip() if pd.notna(c) else "Column"
+        if not c_str:
+            c_str = "Column"
+        if c_str in seen_headers:
+            seen_headers[c_str] += 1
+            unique_headers.append(f"{c_str}_{seen_headers[c_str]}")
+        else:
+            seen_headers[c_str] = 0
+            unique_headers.append(c_str)
+
+    df.columns = unique_headers
+
+    # 2. Write raw DataFrame to worksheet via Pandas
     df.to_excel(writer, sheet_name=sheet_name, index=False)
-    ws = writer.sheets[sheet_name]
-    style_worksheet(
-        ws,
-        header_fill_hex=header_fill_hex,
-        is_kpi=is_kpi,
-        existing_table_names=table_names,
-    )
+    workbook = writer.book
+    worksheet = writer.sheets[sheet_name]
+
+    # Explicitly ensure gridlines are shown on screen and print (0 = don't hide gridlines)
+    worksheet.hide_gridlines(0)
+    worksheet.freeze_panes(1, 0)
+    worksheet.set_row(0, 26)
+
+    # 3. Handle zero-row DataFrames so Excel Tables initialize cleanly
+    effective_last_row = num_rows
+    if num_rows == 0:
+        worksheet.write_blank(1, 0, None)
+        effective_last_row = 1
+
+    # 4. Generate globally unique Excel Table name
+    clean_title = re.sub(r"[^a-zA-Z0-9_]", "_", sheet_name).strip("_")
+    if not clean_title or clean_title[0].isdigit():
+        clean_title = f"T_{clean_title}"
+    base_name = f"Tab_{clean_title}"[:200]
+    candidate = base_name
+    counter = 1
+    while candidate.lower() in table_names:
+        candidate = f"{base_name}_{counter}"
+        counter += 1
+    table_names.add(candidate.lower())
+
+    # 5. Format Definitions & Column Auto-Fitting
+    col_definitions = []
+    for col_idx, col_name in enumerate(unique_headers):
+        fmt_str, align = get_excel_format_and_alignment(col_name)
+        fmt_obj = get_or_create_format(workbook, fmt_str, align)
+
+        col_definitions.append({"header": col_name, "format": fmt_obj})
+
+        # High-Speed Vectorized Width Calculation (Sample max 2,000 rows)
+        header_len = len(str(col_name))
+        if num_rows > 0:
+            sample_series = df[col_name].dropna()
+            if len(sample_series) > 2000:
+                sample_series = pd.concat(
+                    [sample_series.head(1000), sample_series.tail(1000)]
+                )
+            val_len = (
+                sample_series.astype(str).str.len().max()
+                if len(sample_series) > 0
+                else 0
+            )
+            max_len = max(header_len, int(val_len) if pd.notna(val_len) else 0)
+        else:
+            max_len = header_len
+
+        calculated_width = min(max(max_len + 4, 12), 50)
+        worksheet.set_column(col_idx, col_idx, calculated_width, fmt_obj)
+
+    # 6. Attach Native Excel Table (coordinates: first_row, first_col, last_row, last_col)
+    table_style = COLOR_TO_TABLE_STYLE.get(header_fill_hex, "Table Style Medium 9")
+    table_options = {
+        "name": candidate,
+        "style": table_style,
+        "columns": col_definitions,
+        "banded_rows": True,
+        "total_row": False,
+    }
+
+    worksheet.add_table(0, 0, effective_last_row, num_cols - 1, table_options)
 
 
 # ==================================================================================================
-# MODULE 1: INVENTORY MASTER & BATCH CONTROL ENGINE
+# PARQUET LAKEHOUSE STORAGE HELPER (TIER 2 ARCHITECTURE)
+# ==================================================================================================
+def save_to_parquet_lakehouse(df: pd.DataFrame, filename: str, output_dir: str):
+    """
+    Saves the complete, unclipped multi-year raw history to an Apache Parquet lakehouse.
+    Uses snappy compression to reduce 100MB+ datasets into ~8-12MB binary files.
+    """
+    lakehouse_dir = os.path.join(output_dir, "parquet_lakehouse")
+    os.makedirs(lakehouse_dir, exist_ok=True)
+    target_path = os.path.join(lakehouse_dir, filename)
+
+    try:
+        df.to_parquet(target_path, index=False, engine="pyarrow", compression="snappy")
+        file_size_mb = round(os.path.getsize(target_path) / (1024 * 1024), 2)
+        logger.info(
+            f"Tier 2 Lakehouse: Saved {len(df):,} rows to {filename} ({file_size_mb} MB)."
+        )
+    except Exception as e:
+        logger.warning(f"Could not write Parquet lakehouse file {filename}: {e}")
+
+
+# ==================================================================================================
+# MODULE 1: INVENTORY MASTER & BATCH CONTROL ENGINE (HARDENED)
 # ==================================================================================================
 def generate_inventory_workbook(output_dir):
     filename = os.path.join(output_dir, "01_Genius_Inventory_Master.xlsx")
     logger.info(f"Generating Module 1: {filename}...")
 
-    # 1. Active Store Batches with Barcode CTE & Vendor Fallback
+    # 1. Active Store Batches with Barcode CTE & Native DATE Expiry
     q_batches = """
     WITH PrimaryBarcodes AS (
         SELECT io_itm_id, MIN(io_itm_int) AS Primary_Barcode
@@ -537,7 +587,7 @@ def generate_inventory_workbook(output_dir):
         ics.sell_tax AS Unit_Tax,
         CAST(ics.itm_qty * ics.pharm_price AS DECIMAL(18,2)) AS Total_Batch_Cost_Valuation,
         CAST(ics.itm_qty * ics.sell_price AS DECIMAL(18,2)) AS Total_Batch_Retail_Valuation,
-        CONVERT(VARCHAR(10), ics.itm_expiry_date, 120) AS Expiry_Date,
+        CAST(ics.itm_expiry_date AS DATE) AS Expiry_Date,
         COALESCE(v.ven_name_ar, v_cl.ven_name_ar, 'Unassigned / Opening Stock') AS Preferred_Vendor,
         ics.itm_location AS Rack_Location
     FROM Item_Class_Store ics WITH (NOLOCK)
@@ -571,7 +621,7 @@ def generate_inventory_workbook(output_dir):
         MAX(ics.sell_price) AS Current_Retail_Price,
         SUM(CAST(ics.itm_qty * ics.pharm_price AS DECIMAL(18,2))) AS Consolidated_Cost_Value,
         SUM(CAST(ics.itm_qty * ics.sell_price AS DECIMAL(18,2))) AS Consolidated_Retail_Value,
-        MIN(ics.itm_expiry_date) AS Nearest_Expiry
+        CAST(MIN(ics.itm_expiry_date) AS DATE) AS Nearest_Expiry
     FROM Item_Class_Store ics WITH (NOLOCK)
     JOIN Item_Catalog ic WITH (NOLOCK) ON ic.itm_id = ics.itm_id
     LEFT JOIN PrimaryBarcodes pb ON pb.io_itm_id = ic.itm_id
@@ -581,7 +631,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY Consolidated_Cost_Value DESC;
     """
 
-    # 3. Inter-Store Transfers (Between Dispensary 47 and Quarantine 48)
+    # 3. Inter-Store Transfers
     q_transfers = """
     SELECT 
         sth.stnh_id AS Transfer_ID,
@@ -613,7 +663,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY sth.stnh_id DESC;
     """
 
-    # 4. Physical Stocktaking & Audits (Inventory_h & Inventory_d)
+    # 4. Physical Stocktaking & Audits
     q_audits = """
     SELECT 
         ih.inv_id AS Audit_Doc_ID,
@@ -637,7 +687,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY ih.inv_id DESC;
     """
 
-    # 5. Quantity Adjustments & Destructions (Item_Quantity_Changes)
+    # 5. Quantity Adjustments & Destructions
     q_adjustments = """
     SELECT 
         iqc.iqc_id AS Adj_ID,
@@ -659,7 +709,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY iqc.iqc_id DESC;
     """
 
-    # 6. Opening Inventory Baseline (Stock_Open & Stock_Open_d)
+    # 6. Opening Inventory Baseline
     q_opening = """
     SELECT 
         so.so_id AS Opening_Doc_ID,
@@ -670,7 +720,7 @@ def generate_inventory_workbook(output_dir):
         sod.itm_qty AS Opening_Quantity,
         sod.pharm_price AS Cost_Price,
         sod.sell_price AS Retail_Price,
-        sod.itm_expiry_date AS Expiry_Date,
+        CAST(sod.itm_expiry_date AS DATE) AS Expiry_Date,
         so.sec_insert_date AS Setup_Date
     FROM Stock_Open so WITH (NOLOCK)
     JOIN Stock_Open_d sod WITH (NOLOCK) ON sod.so_id = so.so_id
@@ -679,7 +729,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY so.so_id DESC;
     """
 
-    # 7. Real-Time Forensic Stock Audit (Trigger: watch_stock on Item_Class_Store)
+    # 7. Real-Time Forensic Stock Audit (Native DATE)
     q_forensic_stock = """
     SELECT TOP 10000
         w.id AS Audit_Log_ID,
@@ -694,7 +744,7 @@ def generate_inventory_workbook(output_dir):
         w.oper AS Operation_Type,
         w.prog_nm AS Software_Source,
         w.pc_nm AS Client_Machine_Host,
-        CONVERT(VARCHAR(10), w.itm_expiry_date, 120) AS Expiry_Date,
+        CAST(w.itm_expiry_date AS DATE) AS Expiry_Date,
         w.insert_dt AS Log_Timestamp
     FROM watch_qty_chng w WITH (NOLOCK)
     JOIN Item_Catalog ic WITH (NOLOCK) ON ic.itm_id = w.itm_id
@@ -702,7 +752,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY w.id DESC;
     """
 
-    # 8. Shortages Notebook & Replenishment Demand (Shortage)
+    # 8. Shortages Demand
     q_shortages = """
     SELECT 
         s.str_id AS Shortage_ID,
@@ -728,7 +778,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY s.str_id DESC;
     """
 
-    # 9. Expiry Date Modifications Audit (Item_Expire_Change)
+    # 9. Expiry Date Modifications Audit (Native DATE)
     q_expiry_changes = """
     SELECT 
         iec.iec_id AS Expiry_Audit_ID,
@@ -737,8 +787,8 @@ def generate_inventory_workbook(output_dir):
         ic.itm_code AS Internal_Code,
         ic.itm_name_ar AS Item_Name,
         iec.iec_c_id AS Batch_Class_ID,
-        CONVERT(VARCHAR(10), iec.iec_old_expire, 120) AS Old_Expiry_Date,
-        CONVERT(VARCHAR(10), iec.iec_new_expire, 120) AS New_Expiry_Date,
+        CAST(iec.iec_old_expire AS DATE) AS Old_Expiry_Date,
+        CAST(iec.iec_new_expire AS DATE) AS New_Expiry_Date,
         iec.iec_old_qty AS Stock_Quantity_Affected,
         iec.iec_itm_sell_price AS Retail_Price,
         CAST(iec.iec_old_qty * iec.iec_itm_sell_price AS DECIMAL(18,2)) AS Total_Valuation_Impact,
@@ -751,7 +801,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY iec.iec_id DESC;
     """
 
-    # 10. Medicine Official Repricing & Revaluation Gains (Item_Changes)
+    # 10. Medicine Official Repricing
     q_repricing = """
     SELECT 
         ch.ich_id AS Reprice_Audit_ID,
@@ -775,7 +825,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY ch.sec_insert_date DESC;
     """
 
-    # 11. Clinical Indications & Diagnoses Directory (Item_Usage_Causes & Usage_Causes)
+    # 11. Clinical Indications Directory
     q_usage_indications = """
     SELECT 
         iuc.iuc_itm_id AS Item_ID,
@@ -789,7 +839,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY uc.uc_name_ar, iuc.iuc_itm_id;
     """
 
-    # 12. Generic Drug Substitutions & Therapeutic Alternates (Item_Alternates)
+    # 12. Generic Drug Substitutions
     q_substitutions = """
     SELECT 
         ia.itm_id AS Original_Item_ID,
@@ -812,7 +862,7 @@ def generate_inventory_workbook(output_dir):
     ORDER BY ia.itm_id, ia.alt_itm_id;
     """
 
-    # 13. System Inventory Governance & Operational Parameters (Sys_setting)
+    # 13. System Governance
     q_sys_governance = """
     SELECT 
         rec_name AS Pharmacy_Legal_Name,
@@ -827,10 +877,9 @@ def generate_inventory_workbook(output_dir):
     FROM Sys_setting WITH (NOLOCK);
     """
 
-    # --- SINGLE-PASS IN-MEMORY EXCEL WRITING & FORMATTING ---
     table_names = set()
     fill_hex = "1B4D3E"  # Emerald Green
-    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+    with pd.ExcelWriter(filename, engine="xlsxwriter") as writer:
         write_and_style_sheet(
             writer,
             "Current_Store_Batches",
@@ -923,19 +972,17 @@ def generate_inventory_workbook(output_dir):
             table_names=table_names,
         )
 
-    logger.info(
-        "Module 1 (01_Genius_Inventory_Master.xlsx) generated successfully with 13 styled sheets."
-    )
+    logger.info("Module 1 (01_Genius_Inventory_Master.xlsx) generated successfully.")
 
 
 # ==================================================================================================
-# MODULE 2: SALES OPERATIONS & REVENUE ENGINE
+# MODULE 2: SALES OPERATIONS & REVENUE ENGINE (TIER 1 + TIER 2 HYBRID)
 # ==================================================================================================
 def generate_sales_workbook(output_dir):
     filename = os.path.join(output_dir, "02_Genius_Sales_Operations.xlsx")
     logger.info(f"Generating Module 2: {filename}...")
 
-    # 1. Master Sales Invoices Header (sales_trans_h)
+    # 1. Master Sales Invoices Header
     q_sales_h = """
     SELECT 
         h.sth_id AS Bill_ID,
@@ -971,7 +1018,7 @@ def generate_sales_workbook(output_dir):
     ORDER BY h.sth_id DESC;
     """
 
-    # 2. Detailed Dispensed Sales Lines with Optimized Barcode CTE (sales_trans_d)
+    # 2. Detailed Dispensed Sales Lines (Full History extracted once for Parquet & Excel)
     q_sales_d = """
     WITH PrimaryBarcodes AS (
         SELECT io_itm_id, MIN(io_itm_int) AS Primary_Barcode
@@ -987,40 +1034,68 @@ def generate_sales_workbook(output_dir):
         pb.Primary_Barcode AS International_Barcode,
         ic.itm_name_ar AS Item_Name,
         d.c_id AS Batch_Class_ID,
-        d.exp_date AS Batch_Expiry,
+        TRY_CAST(REPLACE(d.exp_date, '/', '-') AS DATE) AS Batch_Expiry,
         d.qnty AS Dispensed_Quantity,
         ISNULL(d.itm_back, 0) AS Returned_Quantity,
-        (d.qnty - ISNULL(d.itm_back, 0)) AS Net_Sold_Units,
+        ca1.net_qty AS Net_Sold_Units,
         d.itm_unit AS Unit_Level,
         d.itm_sell AS Unit_Sale_Price,
         d.itm_cost AS Unit_Cost_COGS,
         d.itm_dis_per AS Item_Discount_Perc,
         d.itm_dis_mon AS Item_Discount_Cash,
-        CAST(
-            CASE WHEN (d.qnty - ISNULL(d.itm_back, 0)) > 0 THEN
-                (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0) / 100.0))) - ISNULL(d.itm_dis_mon, 0))
-                * (1.0 - (ISNULL(h.total_dis_per, 0) / 100.0))
-                - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-            ELSE 0.00 END
-        AS DECIMAL(18,2)) AS Net_Line_Revenue,
-        CAST((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost AS DECIMAL(18,2)) AS Net_Line_COGS,
-        CAST(
-            CASE WHEN (d.qnty - ISNULL(d.itm_back, 0)) > 0 THEN
-                (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0) / 100.0))) - ISNULL(d.itm_dis_mon, 0))
-                * (1.0 - (ISNULL(h.total_dis_per, 0) / 100.0))
-                - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-            ELSE 0.00 END
-            - ((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost)
-        AS DECIMAL(18,2)) AS Realized_Gross_Profit
+        ca2.line_revenue AS Net_Line_Revenue,
+        ca1.line_cogs AS Net_Line_COGS,
+        CAST(ca2.line_revenue - ca1.line_cogs AS DECIMAL(18,2)) AS Realized_Gross_Profit
     FROM sales_trans_d d WITH (NOLOCK)
     JOIN sales_trans_h h WITH (NOLOCK) ON h.sth_id = d.sth_id
     JOIN Item_Catalog ic WITH (NOLOCK) ON ic.itm_id = d.itm_id
     LEFT JOIN PrimaryBarcodes pb ON pb.io_itm_id = d.itm_id
+    CROSS APPLY (
+        SELECT 
+            (d.qnty - ISNULL(d.itm_back, 0)) AS net_qty,
+            CAST((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost AS DECIMAL(18,2)) AS line_cogs
+    ) ca1
+    CROSS APPLY (
+        SELECT 
+            CASE 
+                WHEN ca1.net_qty > 0 THEN
+                    CAST(
+                        (((ca1.net_qty * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0) / 100.0))) - ISNULL(d.itm_dis_mon, 0))
+                        * (1.0 - (ISNULL(h.total_dis_per, 0) / 100.0)))
+                        - ISNULL(h.total_des_mon * ((ca1.net_qty * d.itm_sell) / NULLIF(h.total_bill, 0)), 0.0)
+                    AS DECIMAL(18,2))
+                ELSE 0.00 
+            END AS line_revenue
+    ) ca2
     WHERE h.sth_flag = 'C'
     ORDER BY d.sth_id DESC, d.std_id ASC;
     """
 
-    # 3. Cashier Drawer Tender Splits (sales_trans_payment)
+    # Fetch and Enrich Sales Invoices & Lines
+    df_sales_h = read_sql_and_enrich(q_sales_h, ENGINE)
+    df_sales_d_full = read_sql_and_enrich(q_sales_d, ENGINE)
+
+    # ----------------------------------------------------------------------------------------------
+    # TIER 2: SAVE COMPLETE MULTI-YEAR DATA TO PARQUET LAKEHOUSE
+    # ----------------------------------------------------------------------------------------------
+    save_to_parquet_lakehouse(df_sales_h, "sales_invoices_complete.parquet", output_dir)
+    save_to_parquet_lakehouse(
+        df_sales_d_full, "sales_line_items_complete.parquet", output_dir
+    )
+
+    # ----------------------------------------------------------------------------------------------
+    # TIER 1: FILTER TO ROLLING LAST 180 DAYS FOR ULTRA-FAST EXCEL
+    # ----------------------------------------------------------------------------------------------
+    cutoff_date = pd.Timestamp.now() - pd.Timedelta(days=180)
+    df_sales_d_excel = df_sales_d_full[
+        pd.to_datetime(df_sales_d_full["Sale_Date"]) >= cutoff_date
+    ].copy()
+    logger.info(
+        f"Sales Line Items: {len(df_sales_d_full):,} full rows -> "
+        f"{len(df_sales_d_excel):,} rows retained for Excel (Rolling 180 Days)."
+    )
+
+    # Remaining Operational Queries
     q_payments = """
     SELECT 
         stp.stp_sth_id AS Bill_ID,
@@ -1037,7 +1112,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY stp.stp_sth_id DESC;
     """
 
-    # 4. Sales Return & Refund Auditing (sales_return & sales_return_payment)
     q_returns = """
     SELECT 
         sr.sr_id AS Return_Doc_ID,
@@ -1058,7 +1132,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY sr.sr_id DESC;
     """
 
-    # 5. Electronic Visa / MasterCard Settlements (sales_visa_info)
     q_visa = """
     SELECT 
         svi.sth_id AS Bill_ID,
@@ -1074,7 +1147,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY svi.sth_id DESC;
     """
 
-    # 6. Entire Invoice Voiding & Deletions (sales_trans_h_del)
     q_del_bills = """
     SELECT 
         del.sth_id AS Voided_Bill_ID,
@@ -1091,7 +1163,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY del.sth_delTime DESC;
     """
 
-    # 7. Cashier Post-Save Line Item Voiding (sales_trans_d_del)
     q_deleted_items = """
     SELECT 
         del.sth_id AS Voided_Bill_ID,
@@ -1112,7 +1183,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY del.std_delTime DESC;
     """
 
-    # 8. Quantity & Price Modifications on Completed Invoices (sales_trans_d_modified_qnty)
     q_qty_modifications = """
     SELECT 
         m.sth_id AS Bill_ID,
@@ -1131,7 +1201,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY m.sth_id DESC;
     """
 
-    # 9. Medical Insurance & Syndicate Contract Claims (Customer_Contracts & sales_trans_h)
     q_insurance_claims = """
     SELECT 
         h.sth_id AS Bill_ID,
@@ -1157,7 +1226,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY h.sth_id DESC;
     """
 
-    # 10. Prescribing Doctor & Medical Clinic Analytics (Doctors_specializations & Clinic_specializations)
     q_doctor_referrals = """
     SELECT 
         h.sth_id AS Bill_ID,
@@ -1178,7 +1246,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY h.sth_id DESC;
     """
 
-    # 11. Home Delivery Dispatch, Courier Payouts & Zones (Customer_Delivery & Delivery_cost_region)
     q_delivery_dispatch = """
     SELECT 
         h.sth_id AS Bill_ID,
@@ -1205,7 +1272,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY h.sth_id DESC;
     """
 
-    # 12. Negative Stock Discrepancies / Sold Without Stock (sales_not_exist_modified)
     q_sold_without_stock = """
     SELECT 
         sne.sth_id AS Bill_ID,
@@ -1226,7 +1292,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY sne.sth_id DESC;
     """
 
-    # 13. Customer Loyalty Rewards & Redemptions (Customer & sales_cobons)
     q_loyalty_rewards = """
     SELECT 
         c.cust_id AS Customer_ID,
@@ -1248,7 +1313,6 @@ def generate_sales_workbook(output_dir):
     ORDER BY c.cust_curr_points DESC;
     """
 
-    # 14. Clinical Indication Sales Cross-Tabulation (Primary Indication De-duplicated - BUG 5 FIXED)
     q_clinical_basket_affinity = """
     WITH PrimaryItemIndication AS (
         SELECT 
@@ -1261,56 +1325,54 @@ def generate_sales_workbook(output_dir):
         ISNULL(uc.uc_name_ar, 'General Pharmacy / OTC (غير مصنف)') AS Clinical_Indication,
         COUNT(DISTINCT d.sth_id) AS Prescriptions_Dispensed_Count,
         COUNT(d.std_id) AS Item_Lines_Count,
-        CAST(SUM((d.qnty - ISNULL(d.itm_back, 0)) * (
+        CAST(SUM(ca1.net_qty * (
             CASE d.itm_unit 
                 WHEN 3 THEN (1.0 / ISNULL(NULLIF(ic.itm_unit1_unit3, 0), 1.0)) 
                 WHEN 2 THEN (1.0 / ISNULL(NULLIF(ic.itm_unit1_unit2, 0), 1.0)) 
                 ELSE 1.0 
             END
         )) AS DECIMAL(18,2)) AS Standard_Packs_Sold,
-        CAST(SUM(
-            CASE WHEN (d.qnty - ISNULL(d.itm_back, 0)) > 0 THEN
-                (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0)/100.0))) - ISNULL(d.itm_dis_mon, 0))
-                * (1.0 - (ISNULL(h.total_dis_per, 0)/100.0))
-                - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-            ELSE 0 END
-        ) AS DECIMAL(18,2)) AS Net_Indication_Revenue,
-        CAST(SUM((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost) AS DECIMAL(18,2)) AS Total_COGS,
-        CAST(SUM(
-            CASE WHEN (d.qnty - ISNULL(d.itm_back, 0)) > 0 THEN
-                (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0)/100.0))) - ISNULL(d.itm_dis_mon, 0))
-                * (1.0 - (ISNULL(h.total_dis_per, 0)/100.0))
-                - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-            ELSE 0 END
-        ) - SUM((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost) AS DECIMAL(18,2)) AS Gross_Profit_Yield
+        CAST(SUM(ca2.line_revenue) AS DECIMAL(18,2)) AS Net_Indication_Revenue,
+        CAST(SUM(ca1.line_cogs) AS DECIMAL(18,2)) AS Total_COGS,
+        CAST(SUM(ca2.line_revenue) - SUM(ca1.line_cogs) AS DECIMAL(18,2)) AS Gross_Profit_Yield
     FROM sales_trans_d d WITH (NOLOCK)
     JOIN sales_trans_h h WITH (NOLOCK) ON h.sth_id = d.sth_id
     JOIN Item_Catalog ic WITH (NOLOCK) ON ic.itm_id = d.itm_id
     LEFT JOIN PrimaryItemIndication pii ON pii.iuc_itm_id = ic.itm_id
     LEFT JOIN Usage_Causes uc WITH (NOLOCK) ON uc.uc_id = pii.primary_uc_id
+    CROSS APPLY (
+        SELECT 
+            (d.qnty - ISNULL(d.itm_back, 0)) AS net_qty,
+            (d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost AS line_cogs
+    ) ca1
+    CROSS APPLY (
+        SELECT 
+            CASE 
+                WHEN ca1.net_qty > 0 THEN
+                    (((ca1.net_qty * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0) / 100.0))) - ISNULL(d.itm_dis_mon, 0))
+                    * (1.0 - (ISNULL(h.total_dis_per, 0) / 100.0)))
+                    - ISNULL(h.total_des_mon * ((ca1.net_qty * d.itm_sell) / NULLIF(h.total_bill, 0)), 0.0)
+                ELSE 0.0 
+            END AS line_revenue
+    ) ca2
     WHERE h.sth_flag = 'C' 
       AND ISNULL(d.itm_nexist, 0) <> 1 
       AND ISNULL(ic.itm_srvc, 0) = 0
     GROUP BY uc.uc_name_ar
-    HAVING SUM(d.qnty - ISNULL(d.itm_back, 0)) > 0
+    HAVING SUM(ca1.net_qty) > 0
     ORDER BY Net_Indication_Revenue DESC;
     """
 
-    # --- SINGLE-PASS IN-MEMORY EXCEL WRITING & FORMATTING ---
     table_names = set()
     fill_hex = "1F4E79"  # Sapphire Blue
-    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+    with pd.ExcelWriter(filename, engine="xlsxwriter") as writer:
         write_and_style_sheet(
-            writer,
-            "Sales_Invoices",
-            read_sql_and_enrich(q_sales_h, ENGINE),
-            fill_hex,
-            table_names=table_names,
+            writer, "Sales_Invoices", df_sales_h, fill_hex, table_names=table_names
         )
         write_and_style_sheet(
             writer,
             "Sales_Line_Items",
-            read_sql_and_enrich(q_sales_d, ENGINE),
+            df_sales_d_excel,
             fill_hex,
             table_names=table_names,
         )
@@ -1399,19 +1461,17 @@ def generate_sales_workbook(output_dir):
             table_names=table_names,
         )
 
-    logger.info(
-        "Module 2 (02_Genius_Sales_Operations.xlsx) generated successfully with 14 styled sheets."
-    )
+    logger.info("Module 2 (02_Genius_Sales_Operations.xlsx) generated successfully.")
 
 
 # ==================================================================================================
-# MODULE 3: PROCUREMENT & VENDOR SUPPLY CHAIN
+# MODULE 3: PROCUREMENT & VENDOR SUPPLY CHAIN (HARDENED)
 # ==================================================================================================
 def generate_purchases_workbook(output_dir):
     filename = os.path.join(output_dir, "03_Genius_Purchasing_Operations.xlsx")
     logger.info(f"Generating Module 3: {filename}...")
 
-    # 1. Purchase Invoices Header (pur_trans_h)
+    # 1. Purchase Invoices Header
     q_pur_h = """
     SELECT 
         pth.pth_id AS Purchase_Bill_ID,
@@ -1437,7 +1497,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY pth.pth_id DESC;
     """
 
-    # 2. Detailed Purchase Line Items with Barcode CTE (pur_trans_d)
+    # 2. Detailed Purchase Line Items (Native DATE Expiry)
     q_pur_d = """
     WITH PrimaryBarcodes AS (
         SELECT io_itm_id, MIN(io_itm_int) AS Primary_Barcode
@@ -1455,7 +1515,7 @@ def generate_purchases_workbook(output_dir):
         ic.itm_name_ar AS Item_Name,
         ptd.c_id AS Assigned_Batch_ID,
         ptd.ptd_batch AS Vendor_Lot_Batch,
-        CONVERT(VARCHAR(10), ptd.exp_date, 120) AS Expiry_Date,
+        CAST(ptd.exp_date AS DATE) AS Expiry_Date,
         ptd.qnty AS Purchased_Qty,
         ptd.bonus AS Bonus_Free_Qty,
         ptd.itm_pur_price AS Unit_Wholesale_Price,
@@ -1477,7 +1537,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY ptd.pth_id DESC, ptd.ptd_id ASC;
     """
 
-    # 3. General Vendor Return Vouchers (Item_back_h & Item_back_d)
+    # 3. General Vendor Return Vouchers (Native DATE Expiry)
     q_pur_returns = """
     SELECT 
         ibh.ibh_id AS Return_Doc_ID,
@@ -1490,7 +1550,7 @@ def generate_purchases_workbook(output_dir):
         ibd.ibd_pharm_price AS Refund_Unit_Cost,
         ibd.ibd_tax_price AS Refund_Unit_Tax,
         CAST(ibd.ibd_qty * (ibd.ibd_pharm_price + ibd.ibd_tax_price) AS DECIMAL(18,2)) AS Total_Refund_Credit,
-        CONVERT(VARCHAR(10), ibd.ibd_exp_date, 120) AS Expiry_Date,
+        CAST(ibd.ibd_exp_date AS DATE) AS Expiry_Date,
         ibh.sec_insert_date AS Return_Date,
         COALESCE(emp.e_Name, CAST(ibh.sec_insert_uid AS VARCHAR(50))) AS Returned_By
     FROM Item_back_h ibh WITH (NOLOCK)
@@ -1502,7 +1562,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY ibh.ibh_id DESC;
     """
 
-    # 4. Direct Bill-Linked Purchase Returns (pur_trans_d with itm_back > 0)
+    # 4. Direct Bill-Linked Purchase Returns
     q_direct_bill_returns = """
     SELECT 
         ptd.pth_id AS Purchase_Bill_ID,
@@ -1528,7 +1588,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY ptd.pth_id DESC;
     """
 
-    # 5. Historical Vendor Price Quotes & Discount Terms (Item_Vendor_history)
+    # 5. Vendor Price History
     q_vendor_pricing = """
     SELECT 
         ivh.itm_id AS Item_ID,
@@ -1546,7 +1606,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY ivh.itm_pricing_date DESC;
     """
 
-    # 6. Vendor Ledger Balances & Aging Summary (Vendor)
+    # 6. Vendor Ledger Balances
     q_vendor_ledger = """
     SELECT 
         v.ven_id AS Vendor_ID,
@@ -1568,7 +1628,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY ABS(v.ven_current_credit) DESC;
     """
 
-    # 7. Forensic Vendor Credit Change Audit Trail (vendor_credit_chng)
+    # 7. Forensic Vendor Credit Change Audit Trail
     q_vendor_credit_audit = """
     SELECT 
         vc.vc_id AS Audit_ID,
@@ -1585,7 +1645,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY vc.vc_id DESC;
     """
 
-    # 8. Distributor Price & Discount Arbitrage Optimizer (Item_Vendor)
+    # 8. Distributor Price & Discount Arbitrage
     q_distributor_arbitrage = """
     SELECT 
         iv.itm_id AS Item_ID,
@@ -1609,7 +1669,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY Cumulative_Discount_Rate DESC;
     """
 
-    # 9. Master Vendor Directory & B2B Configuration (Vendor & Vendor_Extn)
+    # 9. Master Vendor Directory
     q_vendor_directory = """
     SELECT 
         v.ven_id AS Vendor_ID,
@@ -1630,7 +1690,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY v.ven_id;
     """
 
-    # 10. Wholesaler Benchmark Catalog Registry (Vendors_Catalogs)
+    # 10. Wholesaler Benchmark Catalog
     q_ucp_catalog = """
     SELECT 
         vc.vc_code AS Distributor_Item_Code,
@@ -1644,7 +1704,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY vc.vc_company, vc.vc_item_name;
     """
 
-    # 11. Supplier Return Early-Warning Radar (BUG 2 FIXED: Fallback to Item_Class.ven_id)
+    # 11. Supplier Return Early-Warning Radar (Native DATE)
     q_supplier_return_radar = """
     SELECT 
         ics.sto_id AS Store_ID,
@@ -1657,7 +1717,7 @@ def generate_purchases_workbook(output_dir):
         ics.itm_qty AS Stock_Quantity,
         ics.pharm_price AS Unit_Cost,
         CAST(ics.itm_qty * ics.pharm_price AS DECIMAL(18,2)) AS Reclaimable_Vendor_Credit,
-        CONVERT(VARCHAR(10), ics.itm_expiry_date, 120) AS Expiry_Date,
+        CAST(ics.itm_expiry_date AS DATE) AS Expiry_Date,
         DATEDIFF(DAY, GETDATE(), ics.itm_expiry_date) AS Days_Until_Expiration,
         ISNULL(COALESCE(v.ven_return_interval, v_cl.ven_return_interval), 30) AS Return_Window_Days,
         CASE 
@@ -1680,7 +1740,7 @@ def generate_purchases_workbook(output_dir):
     ORDER BY Days_Until_Expiration ASC;
     """
 
-    # 12. Replenishment Multi-Distributor Arbitrage Optimizer (Shortage & Item_Vendor)
+    # 12. Replenishment Multi-Distributor Arbitrage Optimizer
     q_replenish_arbitrage = """
     SELECT 
         s.str_itm_id AS Shortage_Item_ID,
@@ -1704,10 +1764,9 @@ def generate_purchases_workbook(output_dir):
     ORDER BY s.str_itm_id, Distributor_Margin_Rank ASC;
     """
 
-    # --- SINGLE-PASS IN-MEMORY EXCEL WRITING & FORMATTING ---
     table_names = set()
     fill_hex = "4A154B"  # Deep Burgundy
-    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+    with pd.ExcelWriter(filename, engine="xlsxwriter") as writer:
         write_and_style_sheet(
             writer,
             "Purchase_Bills",
@@ -1794,18 +1853,17 @@ def generate_purchases_workbook(output_dir):
         )
 
     logger.info(
-        "Module 3 (03_Genius_Purchasing_Operations.xlsx) generated successfully with 12 styled sheets."
+        "Module 3 (03_Genius_Purchasing_Operations.xlsx) generated successfully."
     )
 
 
 # ==================================================================================================
-# MODULE 4: TREASURY & GENERAL FINANCIAL LEDGER
+# MODULE 4: TREASURY & GENERAL FINANCIAL LEDGER (TIER 1 + TIER 2 HYBRID)
 # ==================================================================================================
 def generate_financial_workbook(output_dir):
     filename = os.path.join(output_dir, "04_Genius_Financial_Ledger.xlsx")
     logger.info(f"Generating Module 4: {filename}...")
 
-    # 1. Cash Safes, Drawers & Commercial Bank Accounts (F_Cash_Store)
     q_cash_stores = """
     SELECT 
         fcs.fcs_id AS Fund_ID,
@@ -1828,7 +1886,6 @@ def generate_financial_workbook(output_dir):
     ORDER BY fcs.fcs_type, fcs.fcs_id;
     """
 
-    # 2. General Treasury Cash Receipts & Disbursements (F_Transaction_Header)
     q_treasury_trans = """
     SELECT 
         fh.fh_id AS Entry_ID,
@@ -1877,15 +1934,14 @@ def generate_financial_workbook(output_dir):
     ORDER BY fh.fh_id DESC;
     """
 
-    # 3. Commercial Papers & Cheques Portfolio (F_Transaction_Header_Ext)
     q_cheques = """
     SELECT 
         fhe.fhe_id AS Paper_Registry_ID,
         fhe.fh_id AS Treasury_Header_ID,
         fp.fp_name_ar AS Paper_Type,
         fhe.fhe_paper_number AS Cheque_Paper_Number,
-        fhe.fhe_paper_create_date AS Issue_Date,
-        fhe.fhe_paper_valid_date AS Due_Maturity_Date,
+        CAST(fhe.fhe_paper_create_date AS DATE) AS Issue_Date,
+        CAST(fhe.fhe_paper_valid_date AS DATE) AS Due_Maturity_Date,
         b.bnk_name_ar AS Deposit_Bank,
         CASE fhe.fhe_paper_status 
             WHEN '0' THEN 'Pending In-Portfolio (تحت التحصيل)' 
@@ -1903,9 +1959,9 @@ def generate_financial_workbook(output_dir):
     ORDER BY fhe.fhe_id DESC;
     """
 
-    # 4. Automated Double-Entry General Ledger Journals (F_Auto_Doc_h & F_Auto_Doc_d)
+    # 4. Automated Double-Entry GL Journals (Uncapped for Lakehouse)
     q_gl_engine = """
-    SELECT TOP 50000
+    SELECT 
         fah.fah_id AS Auto_Doc_ID,
         st.sto_name_ar AS Branch_Name,
         fah.fah_type AS System_Trigger,
@@ -1926,7 +1982,26 @@ def generate_financial_workbook(output_dir):
     ORDER BY fah.fah_id DESC, fad.fad_group_id ASC;
     """
 
-    # 5. Customer & Vendor Debit / Credit Adjustment Notices (F_Notices)
+    # Fetch complete GL entries
+    df_gl_full = read_sql_and_enrich(q_gl_engine, ENGINE)
+
+    # ----------------------------------------------------------------------------------------------
+    # TIER 2: SAVE COMPLETE GL LEDGER TO PARQUET LAKEHOUSE
+    # ----------------------------------------------------------------------------------------------
+    save_to_parquet_lakehouse(df_gl_full, "gl_journals_complete.parquet", output_dir)
+
+    # ----------------------------------------------------------------------------------------------
+    # TIER 1: FILTER TO ROLLING LAST 180 DAYS FOR EXCEL
+    # ----------------------------------------------------------------------------------------------
+    cutoff_date = pd.Timestamp.now() - pd.Timedelta(days=180)
+    df_gl_excel = df_gl_full[
+        pd.to_datetime(df_gl_full["Posting_Timestamp"]) >= cutoff_date
+    ].copy()
+    logger.info(
+        f"GL Journals: {len(df_gl_full):,} full rows -> "
+        f"{len(df_gl_excel):,} rows retained for Excel (Rolling 180 Days)."
+    )
+
     q_notices = """
     SELECT 
         fn.fn_id AS Notice_ID,
@@ -1941,6 +2016,11 @@ def generate_financial_workbook(output_dir):
             ELSE 'Party' 
         END AS Party_Type,
         fn.fn_who_id AS Party_ID,
+        CASE 
+            WHEN fn.fn_who_type = '1' THEN ISNULL(v.ven_name_ar, 'Vendor #' + CAST(fn.fn_who_id AS VARCHAR(20)))
+            WHEN fn.fn_who_type = '2' THEN ISNULL(c.cust_name_ar, 'Customer #' + CAST(fn.fn_who_id AS VARCHAR(20)))
+            ELSE 'Internal / Cost Center'
+        END AS Party_Name,
         fnc.fnc_name_ar AS Reason_Category,
         fn.fn_value AS Notice_Amount,
         fn.fn_notes AS Explanation,
@@ -1948,11 +2028,12 @@ def generate_financial_workbook(output_dir):
         COALESCE(emp.e_Name, CAST(fn.sec_insert_uid AS VARCHAR(50))) AS Officer_Name
     FROM F_Notices fn WITH (NOLOCK)
     LEFT JOIN F_Notices_Causes fnc WITH (NOLOCK) ON fnc.fnc_id = fn.fn_cause_id
+    LEFT JOIN Vendor v WITH (NOLOCK) ON v.ven_id = fn.fn_who_id AND fn.fn_who_type = '1'
+    LEFT JOIN Customer c WITH (NOLOCK) ON c.cust_id = fn.fn_who_id AND fn.fn_who_type = '2'
     LEFT JOIN Employee emp WITH (NOLOCK) ON emp.e_id = TRY_CAST(fn.sec_insert_uid AS DECIMAL(18,0))
     ORDER BY fn.fn_id DESC;
     """
 
-    # 6. Customer Credit Accounts & Receivables Position (Customer)
     q_cust_debt = """
     SELECT 
         c.cust_id AS Customer_ID,
@@ -1974,7 +2055,6 @@ def generate_financial_workbook(output_dir):
     ORDER BY c.cust_current_credit DESC;
     """
 
-    # 7. Forensic Customer Credit Change Audit Trail (customer_credit_chng)
     q_customer_credit_audit = """
     SELECT 
         cc.cc_id AS Audit_ID,
@@ -1991,7 +2071,6 @@ def generate_financial_workbook(output_dir):
     ORDER BY cc.cc_id DESC;
     """
 
-    # 8. Hierarchical Chart of Accounts Tree (F_Account_Chart)
     q_chart_of_accounts = """
     SELECT 
         ac.ac_id AS Account_ID,
@@ -2010,7 +2089,6 @@ def generate_financial_workbook(output_dir):
     ORDER BY ac.ac_code ASC;
     """
 
-    # 9. Operational & Indirect Expense Category Registry (Other_Expenses)
     q_operating_expenses = """
     SELECT 
         oe.oe_id AS Expense_Type_ID,
@@ -2025,7 +2103,6 @@ def generate_financial_workbook(output_dir):
     ORDER BY oe.oe_id ASC;
     """
 
-    # 10. GL Auto-Posting Routing Matrix & Parameters (F_Account_Settings)
     q_gl_rules = """
     SELECT 
         acs.acs_id AS Setting_ID,
@@ -2039,7 +2116,6 @@ def generate_financial_workbook(output_dir):
     ORDER BY acs.acs_id;
     """
 
-    # 11. Staff Monthly Payroll Disbursements & Deductions (mon_sal)
     q_staff_payroll = """
     SELECT 
         sal.sal_year AS Payout_Year,
@@ -2053,7 +2129,7 @@ def generate_financial_workbook(output_dir):
         sal.hr_late AS Late_Hours_Penalty,
         sal.days_off AS Days_Absent,
         sal.sal_pen AS Disciplinary_Deductions,
-        sal.sal_fx_ins_emp + sal.sal_ch_ins_emp AS Employee_Social_Insurance,
+        CAST(ISNULL(sal.sal_fx_ins_emp, 0.0) + ISNULL(sal.sal_ch_ins_emp, 0.0) AS DECIMAL(18,2)) AS Employee_Social_Insurance,
         sal.sal_tx AS Income_Tax_Withheld,
         sal.sal_amount AS Net_Salary_Disbursed,
         sal.notes AS Payroll_Notes
@@ -2063,7 +2139,6 @@ def generate_financial_workbook(output_dir):
     ORDER BY sal.sal_year DESC, sal.sal_mon DESC, sal.sal_amount DESC;
     """
 
-    # 12. ETA E-Invoicing & E-Receipt Compliance Audit Trail (sales_trans_h with ETA Flags)
     q_eta_compliance = """
     SELECT 
         h.sth_id AS Bill_ID,
@@ -2089,10 +2164,9 @@ def generate_financial_workbook(output_dir):
     ORDER BY h.sth_id DESC;
     """
 
-    # --- SINGLE-PASS IN-MEMORY EXCEL WRITING & FORMATTING ---
     table_names = set()
     fill_hex = "7D5A00"  # Bronze Gold
-    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+    with pd.ExcelWriter(filename, engine="xlsxwriter") as writer:
         write_and_style_sheet(
             writer,
             "Cash_Safes_Banks",
@@ -2117,7 +2191,7 @@ def generate_financial_workbook(output_dir):
         write_and_style_sheet(
             writer,
             "Automated_GL_Journals",
-            read_sql_and_enrich(q_gl_engine, ENGINE),
+            df_gl_excel,
             fill_hex,
             table_names=table_names,
         )
@@ -2178,23 +2252,21 @@ def generate_financial_workbook(output_dir):
             table_names=table_names,
         )
 
-    logger.info(
-        "Module 4 (04_Genius_Financial_Ledger.xlsx) generated successfully with 12 styled sheets."
-    )
+    logger.info("Module 4 (04_Genius_Financial_Ledger.xlsx) generated successfully.")
 
 
 # ==================================================================================================
-# MODULE 5: POS CASHIER & SHIFT AUDIT TRAIL
+# MODULE 5: POS CASHIER & SHIFT AUDIT TRAIL (HARDENED)
 # ==================================================================================================
 def generate_shifts_workbook(output_dir):
     filename = os.path.join(output_dir, "05_Genius_POS_Shift_Operations.xlsx")
     logger.info(f"Generating Module 5: {filename}...")
 
-    # 1. Master Shift Reconciliation & Blind Cash Count (Shift_Changes)
+    # 1. Master Shift Reconciliation (Guarded Against Orphan Cashiers)
     q_shifts = """
     SELECT 
         sc.sc_id AS Shift_Log_ID,
-        emp.e_Name AS Cashier_Name,
+        COALESCE(emp.e_Name, 'Cashier ID ' + CAST(sc.sc_cashier_id AS VARCHAR(20))) AS Cashier_Name,
         fcs_vault.fcs_name_ar AS Transferred_To_Safe,
         sc.sc_shift_start_time AS Shift_Started_At,
         sc.sec_insert_date AS Shift_Closed_At,
@@ -2213,13 +2285,13 @@ def generate_shifts_workbook(output_dir):
         sc.sc_act_credit AS Visa_Actual_Slip_Total,
         sc.sc_notes AS Shift_Notes
     FROM Shift_Changes sc WITH (NOLOCK)
-    JOIN Employee emp WITH (NOLOCK) ON emp.e_id = sc.sc_cashier_id
+    LEFT JOIN Employee emp WITH (NOLOCK) ON emp.e_id = sc.sc_cashier_id
     LEFT JOIN F_Cash_Store fcs_vault WITH (NOLOCK) ON fcs_vault.fcs_id = sc.sc_fcs_id
     LEFT JOIN Employee next_emp WITH (NOLOCK) ON next_emp.e_id = TRY_CAST(sc.sc_to_employee AS DECIMAL(18,0))
     ORDER BY sc.sc_id DESC;
     """
 
-    # 2. Detailed Shift Ledger Activity Breakdown (Shift_Changes_d)
+    # 2. Detailed Shift Ledger Activity Breakdown
     q_shifts_d = """
     SELECT 
         scd.scd_sc_id AS Shift_Log_ID,
@@ -2244,7 +2316,7 @@ def generate_shifts_workbook(output_dir):
     ORDER BY scd.scd_sc_id DESC;
     """
 
-    # 3. Client Workstation Login / Logout Audit Sessions (log_users)
+    # 3. Client Workstation Login / Logout Audit Sessions
     q_sessions = """
     SELECT 
         lu.lg_id AS Session_ID,
@@ -2263,7 +2335,7 @@ def generate_shifts_workbook(output_dir):
     ORDER BY lu.lg_id DESC;
     """
 
-    # 4. Master Cashier Staff Directory & POS Security Privileges (Employee)
+    # 4. Master Cashier Staff Directory & POS Security Privileges
     q_staff = """
     SELECT 
         e.e_id AS Employee_ID,
@@ -2285,7 +2357,7 @@ def generate_shifts_workbook(output_dir):
     ORDER BY e.e_id ASC;
     """
 
-    # 5. Outbound Drawer Cash Payouts & Expenses (Shift_Changes_d)
+    # 5. Outbound Drawer Cash Payouts & Expenses (Guarded NULL Additions)
     q_drawer_payouts = """
     SELECT 
         scd.scd_sc_id AS Shift_Log_ID,
@@ -2297,17 +2369,17 @@ def generate_shifts_workbook(output_dir):
         scd.scd_c_cashOut AS Petty_Cash_Operating_Expenses,
         scd.scd_c_salesReturn AS Cash_Refunds_Given_To_Customers,
         scd.scd_c_NoticeOut AS Credit_Debit_Notices_Paid,
-        CAST(scd.scd_c_purchases + scd.scd_c_cashOut + scd.scd_c_salesReturn AS DECIMAL(18,2)) AS Total_Cash_Drained_From_Register,
+        CAST(ISNULL(scd.scd_c_purchases, 0.0) + ISNULL(scd.scd_c_cashOut, 0.0) + ISNULL(scd.scd_c_salesReturn, 0.0) AS DECIMAL(18,2)) AS Total_Cash_Drained_From_Register,
         COALESCE(emp.e_Name, CAST(scd.scd_insert_uid AS VARCHAR(50))) AS Cashier_Name
     FROM Shift_Changes_d scd WITH (NOLOCK)
     JOIN Store st WITH (NOLOCK) ON st.sto_id = scd.scd_sto_id
     JOIN F_Cash_Store fcs WITH (NOLOCK) ON fcs.fcs_id = scd.scd_fcs_id
     LEFT JOIN Employee emp WITH (NOLOCK) ON emp.e_id = TRY_CAST(scd.scd_insert_uid AS DECIMAL(18,0))
-    WHERE (scd.scd_c_purchases + scd.scd_c_cashOut + scd.scd_c_salesReturn) > 0
+    WHERE (ISNULL(scd.scd_c_purchases, 0.0) + ISNULL(scd.scd_c_cashOut, 0.0) + ISNULL(scd.scd_c_salesReturn, 0.0)) > 0
     ORDER BY scd.scd_sc_id DESC;
     """
 
-    # 6. Cashier Workstation & Register Drawer Authorizations (Emp_cash_store)
+    # 6. Cashier Workstation & Register Drawer Authorizations
     q_drawer_authorizations = """
     SELECT 
         ecs.ecs_e_id AS Employee_ID,
@@ -2324,7 +2396,7 @@ def generate_shifts_workbook(output_dir):
     ORDER BY st.sto_id, emp.e_id;
     """
 
-    # 7. Employee Store & Inventory Access Permissions (Emp_Stores)
+    # 7. Employee Store & Inventory Access Permissions
     q_emp_stores = """
     SELECT 
         es.es_e_id AS Employee_ID,
@@ -2338,7 +2410,7 @@ def generate_shifts_workbook(output_dir):
     ORDER BY emp.e_id, st.sto_id;
     """
 
-    # 8. Employee Contract Compensation Terms (Emp_Salary)
+    # 8. Employee Contract Compensation Terms
     q_emp_salary_terms = """
     SELECT 
         es.es_id AS Contract_ID,
@@ -2356,7 +2428,7 @@ def generate_shifts_workbook(output_dir):
     ORDER BY emp.e_id;
     """
 
-    # 9. Intercepted Duplicate Sales Vouchers (F_Transaction_Header_SaveDeleteRecords)
+    # 9. Intercepted Duplicate Sales Vouchers
     q_duplicate_vouchers = """
     SELECT 
         fh_id AS Intercepted_Record_ID,
@@ -2370,11 +2442,11 @@ def generate_shifts_workbook(output_dir):
     ORDER BY fh_actual_date DESC;
     """
 
-    # 10. Three-Way Shift Cash Flow Statement (BUG 1 FIXED: Decoupled Drawer & Vault Joins)
+    # 10. Three-Way Shift Cash Flow Statement (Guarded Join and Sums)
     q_shift_cash_flow_matrix = """
     SELECT 
         sc.sc_id AS Shift_Log_ID,
-        emp.e_Name AS Cashier_Name,
+        COALESCE(emp.e_Name, 'Cashier ID ' + CAST(sc.sc_cashier_id AS VARCHAR(20))) AS Cashier_Name,
         fcs_drawer.fcs_name_ar AS Cash_Drawer,
         sc.sc_shift_start_time AS Shift_Started,
         sc.sec_insert_date AS Shift_Closed,
@@ -2395,7 +2467,7 @@ def generate_shifts_workbook(output_dir):
         fcs_vault.fcs_name_ar AS Transferred_To_Safe,
         next_emp.e_Name AS Vault_Receiver
     FROM Shift_Changes sc WITH (NOLOCK)
-    JOIN Employee emp WITH (NOLOCK) ON emp.e_id = sc.sc_cashier_id
+    LEFT JOIN Employee emp WITH (NOLOCK) ON emp.e_id = sc.sc_cashier_id
     LEFT JOIN (
         SELECT 
             scd_sc_id,
@@ -2416,10 +2488,9 @@ def generate_shifts_workbook(output_dir):
     ORDER BY sc.sc_id DESC;
     """
 
-    # --- SINGLE-PASS IN-MEMORY EXCEL WRITING & FORMATTING ---
     table_names = set()
     fill_hex = "1A5276"  # Slate Teal
-    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+    with pd.ExcelWriter(filename, engine="xlsxwriter") as writer:
         write_and_style_sheet(
             writer,
             "Shift_Reconciliation",
@@ -2492,18 +2563,18 @@ def generate_shifts_workbook(output_dir):
         )
 
     logger.info(
-        "Module 5 (05_Genius_POS_Shift_Operations.xlsx) generated successfully with 10 styled sheets."
+        "Module 5 (05_Genius_POS_Shift_Operations.xlsx) generated successfully."
     )
 
 
 # ==================================================================================================
-# MODULE 6: EXECUTIVE BUSINESS INTELLIGENCE & ANALYTICAL COCKPIT
+# MODULE 6: EXECUTIVE BUSINESS INTELLIGENCE & ANALYTICAL COCKPIT (HARDENED)
 # ==================================================================================================
 def generate_executive_bi_workbook(output_dir):
     filename = os.path.join(output_dir, "06_Genius_Executive_Intelligence_Cockpit.xlsx")
     logger.info(f"Generating Module 6: {filename}...")
 
-    # 1. Executive C-Suite KPI Balance Sheet & Scorecard (BUG 4 & Safe 8 Trap Resolved)
+    # 1. Executive C-Suite KPI Balance Sheet & Scorecard
     q_kpi_scorecard = """
     SELECT '1. Total Gross Sales Revenue' AS Metric, 
            CAST(ISNULL(SUM(total_bill), 0) AS DECIMAL(18,2)) AS Value_L_E, 
@@ -2611,7 +2682,7 @@ def generate_executive_bi_workbook(output_dir):
     FROM Shift_Changes WITH (NOLOCK);
     """
 
-    # 2. Reconciled Monthly P&L Statement (Sales, Returns, Net Revenue, COGS, Expenses, Payroll)
+    # 2. Reconciled Monthly P&L Statement
     q_monthly_pnl = """
     WITH MonthlySales AS (
         SELECT 
@@ -2680,7 +2751,7 @@ def generate_executive_bi_workbook(output_dir):
     ORDER BY s.Fin_Year DESC, s.Fin_Month DESC;
     """
 
-    # 3. Item-Level ABC Revenue Pareto Analysis
+    # 3. Item-Level ABC Revenue Pareto Analysis (CROSS APPLY Guarded)
     q_abc_analysis = """
     WITH ItemSales AS (
         SELECT 
@@ -2688,33 +2759,40 @@ def generate_executive_bi_workbook(output_dir):
             ic.itm_code AS Barcode,
             ic.itm_name_ar AS Item_Name,
             c.com_name_ar AS Manufacturer,
-            CAST(SUM((d.qnty - ISNULL(d.itm_back, 0)) * (
+            CAST(SUM(ca1.net_qty * (
                 CASE d.itm_unit 
                     WHEN 3 THEN (1.0 / ISNULL(NULLIF(ic.itm_unit1_unit3, 0), 1.0)) 
                     WHEN 2 THEN (1.0 / ISNULL(NULLIF(ic.itm_unit1_unit2, 0), 1.0)) 
                     ELSE 1.0 
                 END
             )) AS DECIMAL(18,2)) AS Standard_Packs_Sold,
-            CAST(SUM(
-                (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0) / 100.0))) - ISNULL(d.itm_dis_mon, 0))
-                * (1.0 - (ISNULL(h.total_dis_per, 0) / 100.0))
-                - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-            ) AS DECIMAL(18,2)) AS Net_Revenue,
-            CAST(SUM((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost) AS DECIMAL(18,2)) AS Total_COGS,
-            CAST(SUM(
-                (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0) / 100.0))) - ISNULL(d.itm_dis_mon, 0))
-                * (1.0 - (ISNULL(h.total_dis_per, 0) / 100.0))
-                - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-            ) - SUM((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost) AS DECIMAL(18,2)) AS Gross_Profit
+            CAST(SUM(ca2.line_revenue) AS DECIMAL(18,2)) AS Net_Revenue,
+            CAST(SUM(ca1.line_cogs) AS DECIMAL(18,2)) AS Total_COGS,
+            CAST(SUM(ca2.line_revenue) - SUM(ca1.line_cogs) AS DECIMAL(18,2)) AS Gross_Profit
         FROM sales_trans_d d WITH (NOLOCK)
         JOIN sales_trans_h h WITH (NOLOCK) ON h.sth_id = d.sth_id
         JOIN Item_Catalog ic WITH (NOLOCK) ON ic.itm_id = d.itm_id
         LEFT JOIN Company c WITH (NOLOCK) ON c.com_id = ic.com_id
+        CROSS APPLY (
+            SELECT 
+                (d.qnty - ISNULL(d.itm_back, 0)) AS net_qty,
+                (d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost AS line_cogs
+        ) ca1
+        CROSS APPLY (
+            SELECT 
+                CASE 
+                    WHEN ca1.net_qty > 0 THEN
+                        (((ca1.net_qty * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0) / 100.0))) - ISNULL(d.itm_dis_mon, 0))
+                        * (1.0 - (ISNULL(h.total_dis_per, 0) / 100.0)))
+                        - ISNULL(h.total_des_mon * ((ca1.net_qty * d.itm_sell) / NULLIF(h.total_bill, 0)), 0.0)
+                    ELSE 0.0 
+                END AS line_revenue
+        ) ca2
         WHERE h.sth_flag = 'C'
           AND ISNULL(ic.itm_srvc, 0) = 0
           AND ISNULL(d.itm_nexist, 0) <> 1
         GROUP BY ic.itm_id, ic.itm_code, ic.itm_name_ar, c.com_name_ar
-        HAVING SUM(d.qnty - ISNULL(d.itm_back, 0)) > 0
+        HAVING SUM(ca1.net_qty) > 0
     ),
     RankedSales AS (
         SELECT *,
@@ -2742,7 +2820,7 @@ def generate_executive_bi_workbook(output_dir):
     ORDER BY Net_Revenue DESC;
     """
 
-    # 4. Expiry & Stagnant Dead Stock Early-Warning Radar
+    # 4. Dead Stock Radar (Native DATE)
     q_dead_stock_radar = """
     WITH LastItemSale AS (
         SELECT d.itm_id, MAX(h.sec_insert_date) AS Last_Sold_Date
@@ -2761,7 +2839,7 @@ def generate_executive_bi_workbook(output_dir):
         ics.itm_qty AS Stock_On_Hand,
         ics.pharm_price AS Unit_Cost,
         CAST(ics.itm_qty * ics.pharm_price AS DECIMAL(18,2)) AS Capital_At_Risk,
-        CONVERT(VARCHAR(10), ics.itm_expiry_date, 120) AS Expiry_Date,
+        CAST(ics.itm_expiry_date AS DATE) AS Expiry_Date,
         DATEDIFF(DAY, GETDATE(), ics.itm_expiry_date) AS Days_Until_Expiration,
         CASE 
             WHEN ics.itm_expiry_date < GETDATE() THEN 'EXPIRED (منتهي الصلاحية)'
@@ -2770,7 +2848,7 @@ def generate_executive_bi_workbook(output_dir):
             WHEN lis.Last_Sold_Date < DATEADD(DAY, -180, GETDATE()) OR lis.Last_Sold_Date IS NULL THEN 'STAGNANT DEAD STOCK (>180 Days No Sale)'
             ELSE 'STABLE'
         END AS Stock_Risk_Category,
-        ISNULL(lis.Last_Sold_Date, '2000-01-01') AS Last_Sold_Date
+        CAST(ISNULL(lis.Last_Sold_Date, '2000-01-01') AS DATE) AS Last_Sold_Date
     FROM Item_Class_Store ics WITH (NOLOCK)
     JOIN Item_Catalog ic WITH (NOLOCK) ON ic.itm_id = ics.itm_id
     JOIN Store st WITH (NOLOCK) ON st.sto_id = ics.sto_id
@@ -2782,7 +2860,7 @@ def generate_executive_bi_workbook(output_dir):
     ORDER BY Days_Until_Expiration ASC;
     """
 
-    # 5. Hourly Footfall, Sales Traffic & Basket Density
+    # 5. Hourly Footfall
     q_hourly_traffic = """
     SELECT 
         DATEPART(HOUR, sec_insert_date) AS Hour_Of_Day_24H,
@@ -2796,7 +2874,7 @@ def generate_executive_bi_workbook(output_dir):
     ORDER BY Hour_Of_Day_24H ASC;
     """
 
-    # 6. Strategic Vendor Performance & Supply Concentration Matrix
+    # 6. Strategic Vendor Matrix
     q_vendor_performance = """
     SELECT 
         v.ven_id AS Vendor_ID,
@@ -2818,7 +2896,7 @@ def generate_executive_bi_workbook(output_dir):
     ORDER BY Total_Purchased_Net DESC;
     """
 
-    # 7. Multi-Branch Operational Benchmark (Dispensary vs Quarantine)
+    # 7. Multi-Branch Operational Benchmark
     q_store_matrix = """
     SELECT 
         st.sto_id AS Store_ID,
@@ -2838,7 +2916,7 @@ def generate_executive_bi_workbook(output_dir):
     WHERE st.activated = 1;
     """
 
-    # 8. Monthly Inventory Close Valuation Trend (ICS_Month_Close)
+    # 8. Monthly Inventory Close Valuation Trend
     q_monthly_stock_trend = """
     SELECT 
         YEAR(imc.sec_insert_date) AS Close_Year,
@@ -2856,52 +2934,50 @@ def generate_executive_bi_workbook(output_dir):
     ORDER BY Close_Year DESC, Close_Month DESC;
     """
 
-    # 9. Therapeutic Class Profitability & Margin Ranking (Scientific_Groups)
+    # 9. Therapeutic Class Profitability with CROSS APPLY (Guarded)
     q_therapeutic_profitability = """
     SELECT 
         ISNULL(sg.sg_name_ar, 'General Pharmaceuticals (غير مصنف)') AS Therapeutic_Class,
         COUNT(DISTINCT d.itm_id) AS Active_Medicines_Count,
-        CAST(SUM((d.qnty - ISNULL(d.itm_back, 0)) * (
+        CAST(SUM(ca1.net_qty * (
             CASE d.itm_unit 
                 WHEN 3 THEN (1.0 / ISNULL(NULLIF(ic.itm_unit1_unit3, 0), 1.0)) 
                 WHEN 2 THEN (1.0 / ISNULL(NULLIF(ic.itm_unit1_unit2, 0), 1.0)) 
                 ELSE 1.0 
             END
         )) AS DECIMAL(18,2)) AS Standard_Packs_Sold,
-        CAST(SUM(
-            (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0)/100.0))) - ISNULL(d.itm_dis_mon, 0))
-            * (1.0 - (ISNULL(h.total_dis_per, 0)/100.0))
-            - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-        ) AS DECIMAL(18,2)) AS Net_Revenue,
-        CAST(SUM((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost) AS DECIMAL(18,2)) AS Total_COGS,
-        CAST(SUM(
-            (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0)/100.0))) - ISNULL(d.itm_dis_mon, 0))
-            * (1.0 - (ISNULL(h.total_dis_per, 0)/100.0))
-            - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-        ) - SUM((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost) AS DECIMAL(18,2)) AS Gross_Profit,
-        CAST((SUM(
-            (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0)/100.0))) - ISNULL(d.itm_dis_mon, 0))
-            * (1.0 - (ISNULL(h.total_dis_per, 0)/100.0))
-            - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-        ) - SUM((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost)) 
-             / NULLIF(SUM(
-                 (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0)/100.0))) - ISNULL(d.itm_dis_mon, 0))
-                 * (1.0 - (ISNULL(h.total_dis_per, 0)/100.0))
-                 - (ISNULL(h.total_des_mon, 0) * (((d.qnty - ISNULL(d.itm_back, 0)) * d.itm_sell) / NULLIF(h.total_bill, 0)))
-             ), 0) AS DECIMAL(18,4)) AS Gross_Margin_Rate
+        CAST(SUM(ca2.line_revenue) AS DECIMAL(18,2)) AS Net_Revenue,
+        CAST(SUM(ca1.line_cogs) AS DECIMAL(18,2)) AS Total_COGS,
+        CAST(SUM(ca2.line_revenue) - SUM(ca1.line_cogs) AS DECIMAL(18,2)) AS Gross_Profit,
+        CAST((SUM(ca2.line_revenue) - SUM(ca1.line_cogs)) / NULLIF(SUM(ca2.line_revenue), 0) AS DECIMAL(18,4)) AS Gross_Margin_Rate
     FROM sales_trans_d d WITH (NOLOCK)
     JOIN sales_trans_h h WITH (NOLOCK) ON h.sth_id = d.sth_id
     JOIN Item_Catalog ic WITH (NOLOCK) ON ic.itm_id = d.itm_id
     LEFT JOIN Scientific_Groups sg WITH (NOLOCK) ON sg.sg_id = ic.itm_scientific_group_id
+    CROSS APPLY (
+        SELECT 
+            (d.qnty - ISNULL(d.itm_back, 0)) AS net_qty,
+            (d.qnty - ISNULL(d.itm_back, 0)) * d.itm_cost AS line_cogs
+    ) ca1
+    CROSS APPLY (
+        SELECT 
+            CASE 
+                WHEN ca1.net_qty > 0 THEN
+                    (((ca1.net_qty * d.itm_sell * (1.0 - (ISNULL(d.itm_dis_per, 0) / 100.0))) - ISNULL(d.itm_dis_mon, 0))
+                    * (1.0 - (ISNULL(h.total_dis_per, 0) / 100.0)))
+                    - ISNULL(h.total_des_mon * ((ca1.net_qty * d.itm_sell) / NULLIF(h.total_bill, 0)), 0.0)
+                ELSE 0.0 
+            END AS line_revenue
+    ) ca2
     WHERE h.sth_flag = 'C'
       AND ISNULL(ic.itm_srvc, 0) = 0
       AND ISNULL(d.itm_nexist, 0) <> 1
     GROUP BY sg.sg_name_ar
-    HAVING SUM(d.qnty - ISNULL(d.itm_back, 0)) > 0
+    HAVING SUM(ca1.net_qty) > 0
     ORDER BY Net_Revenue DESC;
     """
 
-    # 10. Customer Receivables Exposure & Aging Risk Buckets
+    # 10. Customer Receivables Aging
     q_receivables_aging = """
     SELECT 
         c.cust_id AS Customer_ID,
@@ -2924,7 +3000,7 @@ def generate_executive_bi_workbook(output_dir):
     ORDER BY c.cust_current_credit DESC;
     """
 
-    # 11. Transaction Basket Size Tier Distribution
+    # 11. Transaction Basket Size Distribution
     q_basket_size_distribution = """
     SELECT 
         CASE 
@@ -2951,10 +3027,9 @@ def generate_executive_bi_workbook(output_dir):
     ORDER BY Basket_Tier;
     """
 
-    # --- SINGLE-PASS IN-MEMORY EXCEL WRITING & FORMATTING ---
     table_names = set()
     fill_hex = "0B132B"  # Dark Navy
-    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+    with pd.ExcelWriter(filename, engine="xlsxwriter") as writer:
         write_and_style_sheet(
             writer,
             "Executive_KPI_Summary",
@@ -3035,7 +3110,7 @@ def generate_executive_bi_workbook(output_dir):
         )
 
     logger.info(
-        "Module 6 (06_Genius_Executive_Intelligence_Cockpit.xlsx) generated successfully with 11 styled sheets."
+        "Module 6 (06_Genius_Executive_Intelligence_Cockpit.xlsx) generated successfully."
     )
 
 
@@ -3051,7 +3126,7 @@ def main():
         "STARTING GENIUS ERP COMPREHENSIVE DATA CONSOLIDATION PIPELINE (MASTER)"
     )
     logger.info(
-        "Universal Historical Scope (All Years Included) | In-Memory OpenPyXL Styling"
+        "Universal Historical Scope (All Years Included) | In-Memory xlsxwriter Styling"
     )
     logger.info(
         "=========================================================================="

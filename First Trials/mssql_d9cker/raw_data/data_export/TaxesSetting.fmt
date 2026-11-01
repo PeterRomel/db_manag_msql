@@ -1,0 +1,8 @@
+8.0
+6
+1       SQLCHAR       0       12      "\t"                      1     Id                ""
+2       SQLCHAR       0       16001   "\t"                      2     taxno             ""
+3       SQLCHAR       0       16001   "\t"                      3     ClientId          ""
+4       SQLCHAR       0       16001   "\t"                      4     ClientSecret      ""
+5       SQLCHAR       0       100     "\t"                      5     activity_code     SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       250     "\r\n"                    6     eta_url           SQL_Latin1_General_CP1256_CI_AS

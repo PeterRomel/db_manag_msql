@@ -1,0 +1,19 @@
+8.0
+17
+1       SQLCHAR       0       41      "\t"                      1     ss_id                                  ""
+2       SQLCHAR       0       101     "\t"                      2     ss_pwd                                 ""
+3       SQLCHAR       0       12      "\t"                      3     ss_each_form                           ""
+4       SQLCHAR       0       1       "\t"                      4     ss_hot_key                             SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       12      "\t"                      5     ss_months_before_expiry                ""
+6       SQLCHAR       0       12      "\t"                      6     ss_show_protected_stores_in_report     ""
+7       SQLCHAR       0       41      "\t"                      7     ss_def_sell_sto                        ""
+8       SQLCHAR       0       41      "\t"                      8     ss_def_pur_sto                         ""
+9       SQLCHAR       0       12      "\t"                      9     ss_def_pur_bonus_save                  ""
+10      SQLCHAR       0       12      "\t"                      10    ss_chk_expire_on_pur                   ""
+11      SQLCHAR       0       50      "\t"                      11    sec_insert_uid                         SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       24      "\t"                      12    sec_insert_date                        ""
+13      SQLCHAR       0       50      "\t"                      13    sec_update_uid                         SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       24      "\t"                      14    sec_update_date                        ""
+15      SQLCHAR       0       12      "\t"                      15    ss_pur_tax_calc                        ""
+16      SQLCHAR       0       12      "\t"                      16    ss_pur_allow_user_modify               ""
+17      SQLCHAR       0       12      "\r\n"                    17    ss_pend_affect_stk                     ""

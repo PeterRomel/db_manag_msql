@@ -1,0 +1,19 @@
+8.0
+17
+1       SQLCHAR       0       41      "\t"                      1     err_id              ""
+2       SQLCHAR       0       41      "\t"                      2     trans_typ_1         ""
+3       SQLCHAR       0       41      "\t"                      3     trans_typ_2         ""
+4       SQLCHAR       0       41      "\t"                      4     store_id            ""
+5       SQLCHAR       0       41      "\t"                      5     store_id2           ""
+6       SQLCHAR       0       41      "\t"                      6     itm_id              ""
+7       SQLCHAR       0       41      "\t"                      7     class_id            ""
+8       SQLCHAR       0       41      "\t"                      8     class_id_ext1       ""
+9       SQLCHAR       0       41      "\t"                      9     class_id_ext2       ""
+10      SQLCHAR       0       41      "\t"                      10    itm_qty             ""
+11      SQLCHAR       0       24      "\t"                      11    itm_expire          ""
+12      SQLCHAR       0       41      "\t"                      12    general_id          ""
+13      SQLCHAR       0       255     "\t"                      13    general_name        SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       2048    "\t"                      14    trans_qry           SQL_Latin1_General_CP1256_CI_AS
+15      SQLCHAR       0       2048    "\t"                      15    error1              SQL_Latin1_General_CP1256_CI_AS
+16      SQLCHAR       0       50      "\t"                      16    sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+17      SQLCHAR       0       24      "\r\n"                    17    sec_insert_date     ""

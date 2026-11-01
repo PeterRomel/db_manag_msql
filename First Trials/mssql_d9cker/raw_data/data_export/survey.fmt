@@ -1,0 +1,20 @@
+8.0
+18
+1       SQLCHAR       0       41      "\t"                      1     s_id                ""
+2       SQLCHAR       0       100     "\t"                      2     prog_name           SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       200     "\t"                      3     doctor_name         SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       1000    "\t"                      4     doctor_address      SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       50      "\t"                      5     doctor_phone        SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       100     "\t"                      6     pharmacy_name       SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       3000    "\t"                      7     doctor_comment      SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       100     "\t"                      8     prog_No             SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       200     "\t"                      9     prog_quality        SQL_Latin1_General_CP1256_CI_AS
+10      SQLCHAR       0       200     "\t"                      10    prog_m_use          SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       200     "\t"                      11    prog_service        SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       200     "\t"                      12    cust_s_time         SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       200     "\t"                      13    support_time        SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       200     "\t"                      14    support_desc        SQL_Latin1_General_CP1256_CI_AS
+15      SQLCHAR       0       200     "\t"                      15    is_sup_useful       SQL_Latin1_General_CP1256_CI_AS
+16      SQLCHAR       0       24      "\t"                      16    sec_insert_date     ""
+17      SQLCHAR       0       50      "\t"                      17    ph_branch           SQL_Latin1_General_CP1256_CI_AS
+18      SQLCHAR       0       20      "\r\n"                    18    ph_code             SQL_Latin1_General_CP1256_CI_AS

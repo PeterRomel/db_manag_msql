@@ -1,0 +1,6 @@
+8.0
+4
+1       SQLCHAR       0       41      "\t"                      1     iuc_itm_id          ""
+2       SQLCHAR       0       41      "\t"                      2     iuc_uc_id           ""
+3       SQLCHAR       0       50      "\t"                      3     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       24      "\r\n"                    4     sec_insert_date     ""

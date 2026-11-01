@@ -1,0 +1,24 @@
+8.0
+22
+1       SQLCHAR       0       41      "\t"                      1     std_id              ""
+2       SQLCHAR       0       41      "\t"                      2     sth_id              ""
+3       SQLCHAR       0       41      "\t"                      3     itm_id              ""
+4       SQLCHAR       0       41      "\t"                      4     c_id                ""
+5       SQLCHAR       0       20      "\t"                      5     exp_date            SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       30      "\t"                      6     qnty                ""
+7       SQLCHAR       0       12      "\t"                      7     itm_unit            ""
+8       SQLCHAR       0       30      "\t"                      8     itm_sell            ""
+9       SQLCHAR       0       30      "\t"                      9     itm_cost            ""
+10      SQLCHAR       0       30      "\t"                      10    itm_dis_mon         ""
+11      SQLCHAR       0       30      "\t"                      11    itm_dis_per         ""
+12      SQLCHAR       0       41      "\t"                      12    itm_back            ""
+13      SQLCHAR       0       30      "\t"                      13    itm_back_price      ""
+14      SQLCHAR       0       30      "\t"                      14    itm_aver_cost       ""
+15      SQLCHAR       0       10      "\t"                      15    sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+16      SQLCHAR       0       24      "\t"                      16    sec_insert_date     ""
+17      SQLCHAR       0       10      "\t"                      17    sec_update_uid      SQL_Latin1_General_CP1256_CI_AS
+18      SQLCHAR       0       24      "\t"                      18    sec_update_date     ""
+19      SQLCHAR       0       12      "\t"                      19    itm_nexist          ""
+20      SQLCHAR       0       100     "\t"                      20    std_del_pc_name     SQL_Latin1_General_CP1256_CI_AS
+21      SQLCHAR       0       12      "\t"                      21    std_itm_origin      ""
+22      SQLCHAR       0       24      "\r\n"                    22    std_delTime         ""

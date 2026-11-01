@@ -1,0 +1,10 @@
+8.0
+8
+1       SQLCHAR       0       12      "\t"                      1     ids_day               ""
+2       SQLCHAR       0       5       "\t"                      2     ids_sto_id            ""
+3       SQLCHAR       0       12      "\t"                      3     ids_itm_id            ""
+4       SQLCHAR       0       41      "\t"                      4     ids_qty               ""
+5       SQLCHAR       0       41      "\t"                      5     ids_sellPrice         ""
+6       SQLCHAR       0       41      "\t"                      6     ids_taxPrice          ""
+7       SQLCHAR       0       41      "\t"                      7     ids_purchasePrice     ""
+8       SQLCHAR       0       24      "\r\n"                    8     ids_insertTime        ""

@@ -1,0 +1,9 @@
+8.0
+7
+1       SQLCHAR       0       41      "\t"                      1     rsl_id         ""
+2       SQLCHAR       0       24      "\t"                      2     rsl_time       ""
+3       SQLCHAR       0       50      "\t"                      3     rsl_type       SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       100     "\t"                      4     rsl_title      SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       1000    "\t"                      5     rsl_msg        SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       500     "\t"                      6     rsl_params     SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       2000    "\r\n"                    7     rsl_sql        SQL_Latin1_General_CP1256_CI_AS

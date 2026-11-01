@@ -1,0 +1,8 @@
+8.0
+6
+1       SQLCHAR       0       12      "\t"                      1     ctd_cth_id        ""
+2       SQLCHAR       0       12      "\t"                      2     ctd_id            ""
+3       SQLCHAR       0       12      "\t"                      3     ctd_sto_id        ""
+4       SQLCHAR       0       41      "\t"                      4     ctd_balance       ""
+5       SQLCHAR       0       41      "\t"                      5     ctd_paid          ""
+6       SQLCHAR       0       24      "\r\n"                    6     ctd_sent_time     ""

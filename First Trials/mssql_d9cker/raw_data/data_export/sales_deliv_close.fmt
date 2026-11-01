@@ -1,0 +1,8 @@
+8.0
+6
+1       SQLCHAR       0       41      "\t"                      1     sdc_id              ""
+2       SQLCHAR       0       41      "\t"                      2     sdc_emp_id          ""
+3       SQLCHAR       0       41      "\t"                      3     sdc_bill_no         ""
+4       SQLCHAR       0       30      "\t"                      4     sdc_bill_value      ""
+5       SQLCHAR       0       50      "\t"                      5     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       24      "\r\n"                    6     sec_insert_date     ""

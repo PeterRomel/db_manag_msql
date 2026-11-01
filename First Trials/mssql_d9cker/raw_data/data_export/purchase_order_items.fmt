@@ -1,0 +1,27 @@
+8.0
+25
+1       SQLCHAR       0       41      "\t"                      1     itm_pur_id             ""
+2       SQLCHAR       0       41      "\t"                      2     pur_id                 ""
+3       SQLCHAR       0       41      "\t"                      3     itm_id                 ""
+4       SQLCHAR       0       50      "\t"                      4     itm_ven_code           SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       41      "\t"                      5     c_id                   ""
+6       SQLCHAR       0       41      "\t"                      6     c_ext_id               ""
+7       SQLCHAR       0       41      "\t"                      7     c_act_id               ""
+8       SQLCHAR       0       41      "\t"                      8     ven_id                 ""
+9       SQLCHAR       0       41      "\t"                      9     itm_qty                ""
+10      SQLCHAR       0       12      "\t"                      10    itm_unit               ""
+11      SQLCHAR       0       1       "\t"                      11    itm_pur_web_flag       SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       41      "\t"                      12    itm_actual_qty         ""
+13      SQLCHAR       0       41      "\t"                      13    itm_pro_qty            ""
+14      SQLCHAR       0       41      "\t"                      14    itm_actual_pro_qty     ""
+15      SQLCHAR       0       30      "\t"                      15    itm_sell_price         ""
+16      SQLCHAR       0       30      "\t"                      16    itm_tax                ""
+17      SQLCHAR       0       30      "\t"                      17    itm_pharm_price        ""
+18      SQLCHAR       0       12      "\t"                      18    itm_avail              ""
+19      SQLCHAR       0       12      "\t"                      19    itm_quta               ""
+20      SQLCHAR       0       24      "\t"                      20    itm_expiry_date        ""
+21      SQLCHAR       0       4       "\t"                      21    status                 SQL_Latin1_General_CP1256_CI_AS
+22      SQLCHAR       0       50      "\t"                      22    sec_insert_uid         SQL_Latin1_General_CP1256_CI_AS
+23      SQLCHAR       0       24      "\t"                      23    sec_insert_date        ""
+24      SQLCHAR       0       50      "\t"                      24    sec_update_uid         SQL_Latin1_General_CP1256_CI_AS
+25      SQLCHAR       0       24      "\r\n"                    25    sec_update_date        ""

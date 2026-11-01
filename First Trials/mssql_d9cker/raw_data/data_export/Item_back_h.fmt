@@ -1,0 +1,17 @@
+8.0
+15
+1       SQLCHAR       0       41      "\t"                      1     ibh_id                ""
+2       SQLCHAR       0       41      "\t"                      2     ibh_ven_id            ""
+3       SQLCHAR       0       30      "\t"                      3     ibh_total_value       ""
+4       SQLCHAR       0       50      "\t"                      4     ibh_ven_back_conf     SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       12      "\t"                      5     ibh_back_reason       ""
+6       SQLCHAR       0       50      "\t"                      6     sec_insert_uid        SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       24      "\t"                      7     sec_insert_date       ""
+8       SQLCHAR       0       50      "\t"                      8     sec_update_uid        SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\t"                      9     sec_update_date       ""
+10      SQLCHAR       0       12      "\t"                      10    ibh_type              ""
+11      SQLCHAR       0       500     "\t"                      11    ibh_notes             SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       500     "\t"                      12    ibh_ven_notes         SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       1       "\t"                      13    ibh_web_flag          SQL_Latin1_General_CP1256_CI_AS
+14      SQLCHAR       0       41      "\t"                      14    ibh_pur_id            ""
+15      SQLCHAR       0       41      "\r\n"                    15    ibh_sto_id            ""

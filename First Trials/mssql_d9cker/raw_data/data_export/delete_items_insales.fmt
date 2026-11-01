@@ -1,0 +1,11 @@
+8.0
+9
+1       SQLCHAR       0       41      "\t"                      1     di_id              ""
+2       SQLCHAR       0       41      "\t"                      2     di_itm_id          ""
+3       SQLCHAR       0       41      "\t"                      3     di_sto_id          ""
+4       SQLCHAR       0       41      "\t"                      4     di_c_id            ""
+5       SQLCHAR       0       41      "\t"                      5     di_cashier_id      ""
+6       SQLCHAR       0       30      "\t"                      6     di_itm_qty         ""
+7       SQLCHAR       0       12      "\t"                      7     di_itm_unit        ""
+8       SQLCHAR       0       50      "\t"                      8     di_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       24      "\r\n"                    9     di_insert_date     ""

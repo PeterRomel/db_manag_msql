@@ -1,0 +1,24 @@
+8.0
+22
+1       SQLCHAR       0       41      "\t"                      1     c_id               ""
+2       SQLCHAR       0       41      "\t"                      2     c_order_id         ""
+3       SQLCHAR       0       1001    "\t"                      3     c_text_ar          ""
+4       SQLCHAR       0       50      "\t"                      4     c_text_en          SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       50      "\t"                      5     c_name             SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       50      "\t"                      6     c_desc_ar          SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       50      "\t"                      7     c_desc_en          SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       1001    "\t"                      8     c_form             ""
+9       SQLCHAR       0       1       "\t"                      9     c_type             SQL_Latin1_General_CP1256_CI_AS
+10      SQLCHAR       0       12      "\t"                      10    c_parent           ""
+11      SQLCHAR       0       50      "\t"                      11    c_shortcut         SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       50      "\t"                      12    c_shortcut2        SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       12      "\t"                      13    c_visible          ""
+14      SQLCHAR       0       12      "\t"                      14    c_checked          ""
+15      SQLCHAR       0       12      "\t"                      15    c_dialog           ""
+16      SQLCHAR       0       5       "\t"                      16    c_controls         SQL_Latin1_General_CP1256_CI_AS
+17      SQLCHAR       0       12      "\t"                      17    c_favourite        ""
+18      SQLCHAR       0       12      "\t"                      18    c_auto_open        ""
+19      SQLCHAR       0       50      "\t"                      19    c_image            SQL_Latin1_General_CP1256_CI_AS
+20      SQLCHAR       0       24      "\t"                      20    c_ceate_date       ""
+21      SQLCHAR       0       12      "\t"                      21    c_report           ""
+22      SQLCHAR       0       16001   "\r\n"                    22    c_text_page_en     ""

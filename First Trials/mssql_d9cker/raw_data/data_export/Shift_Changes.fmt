@@ -1,0 +1,24 @@
+8.0
+22
+1       SQLCHAR       0       41      "\t"                      1     sc_id                   ""
+2       SQLCHAR       0       41      "\t"                      2     sc_cashier_id           ""
+3       SQLCHAR       0       24      "\t"                      3     sc_shift_start_time     ""
+4       SQLCHAR       0       30      "\t"                      4     sc_start_cash           ""
+5       SQLCHAR       0       30      "\t"                      5     sc_start_post_pay       ""
+6       SQLCHAR       0       30      "\t"                      6     sc_start_credit         ""
+7       SQLCHAR       0       30      "\t"                      7     sc_curr_cash            ""
+8       SQLCHAR       0       30      "\t"                      8     sc_curr_post_pay        ""
+9       SQLCHAR       0       30      "\t"                      9     sc_curr_credit          ""
+10      SQLCHAR       0       30      "\t"                      10    sc_act_cash             ""
+11      SQLCHAR       0       30      "\t"                      11    sc_act_post_pay         ""
+12      SQLCHAR       0       30      "\t"                      12    sc_act_credit           ""
+13      SQLCHAR       0       41      "\t"                      13    sc_to_employee          ""
+14      SQLCHAR       0       41      "\t"                      14    sc_fcs_id               ""
+15      SQLCHAR       0       30      "\t"                      15    sc_trans_value          ""
+16      SQLCHAR       0       50      "\t"                      16    sec_insert_uid          SQL_Latin1_General_CP1256_CI_AS
+17      SQLCHAR       0       24      "\t"                      17    sec_insert_date         ""
+18      SQLCHAR       0       50      "\t"                      18    sec_update_uid          SQL_Latin1_General_CP1256_CI_AS
+19      SQLCHAR       0       24      "\t"                      19    sec_update_date         ""
+20      SQLCHAR       0       150     "\t"                      20    sc_notes                SQL_Latin1_General_CP1256_CI_AS
+21      SQLCHAR       0       12      "\t"                      21    sc_visa_act_count       ""
+22      SQLCHAR       0       12      "\r\n"                    22    sc_visa_curr_count      ""

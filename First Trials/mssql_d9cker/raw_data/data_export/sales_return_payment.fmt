@@ -1,0 +1,12 @@
+8.0
+10
+1       SQLCHAR       0       12      "\t"                      1     srp_sto_id          ""
+2       SQLCHAR       0       41      "\t"                      2     srp_sr_id           ""
+3       SQLCHAR       0       12      "\t"                      3     srp_sr_type         ""
+4       SQLCHAR       0       12      "\t"                      4     srp_pt_id           ""
+5       SQLCHAR       0       12      "\t"                      5     srp_fcs_id          ""
+6       SQLCHAR       0       30      "\t"                      6     srp_value           ""
+7       SQLCHAR       0       100     "\t"                      7     srp_version         SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       100     "\t"                      8     srp_pc_name         SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       12      "\t"                      9     srp_insert_uid      ""
+10      SQLCHAR       0       24      "\r\n"                    10    srp_insert_date     ""

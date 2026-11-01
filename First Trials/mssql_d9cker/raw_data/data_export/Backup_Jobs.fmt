@@ -1,0 +1,15 @@
+8.0
+13
+1       SQLCHAR       0       41      "\t"                      1     bj_id               ""
+2       SQLCHAR       0       50      "\t"                      2     bj_name             SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       50      "\t"                      3     bj_backup_path      SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       1       "\t"                      4     bj_active           SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       1       "\t"                      5     bj_enabled          SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       33      "\t"                      6     bj_job_id           ""
+7       SQLCHAR       0       50      "\t"                      7     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       24      "\t"                      8     sec_insert_date     ""
+9       SQLCHAR       0       50      "\t"                      9     sec_update_uid      SQL_Latin1_General_CP1256_CI_AS
+10      SQLCHAR       0       24      "\t"                      10    sec_update_date     ""
+11      SQLCHAR       0       24      "\t"                      11    at_time             ""
+12      SQLCHAR       0       12      "\t"                      12    every_int           ""
+13      SQLCHAR       0       12      "\r\n"                    13    no_of_dayes         ""

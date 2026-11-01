@@ -1,0 +1,12 @@
+8.0
+10
+1       SQLCHAR       0       41      "\t"                      1     sth_id              ""
+2       SQLCHAR       0       41      "\t"                      2     itm_id              ""
+3       SQLCHAR       0       12      "\t"                      3     itm_unit            ""
+4       SQLCHAR       0       41      "\t"                      4     itm_unit1_unit2     ""
+5       SQLCHAR       0       41      "\t"                      5     itm_unit1_unit3     ""
+6       SQLCHAR       0       30      "\t"                      6     qnty                ""
+7       SQLCHAR       0       41      "\t"                      7     itm_back            ""
+8       SQLCHAR       0       30      "\t"                      8     new                 ""
+9       SQLCHAR       0       41      "\t"                      9     newprice            ""
+10      SQLCHAR       0       30      "\r\n"                    10    itm_sell            ""

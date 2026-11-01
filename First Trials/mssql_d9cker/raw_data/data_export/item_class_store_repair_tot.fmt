@@ -1,0 +1,6 @@
+8.0
+4
+1       SQLCHAR       0       41      "\t"                      1     sto_id     ""
+2       SQLCHAR       0       41      "\t"                      2     itm_id     ""
+3       SQLCHAR       0       41      "\t"                      3     qty        ""
+4       SQLCHAR       0       41      "\r\n"                    4     trans      ""

@@ -1,0 +1,22 @@
+8.0
+20
+1       SQLCHAR       0       41      "\t"                      1     fh_id                    ""
+2       SQLCHAR       0       2       "\t"                      2     fh_trans_type            SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       2       "\t"                      3     fh_trans_type2           SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       10      "\t"                      4     fh_code                  SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       30      "\t"                      5     fh_value                 ""
+6       SQLCHAR       0       2       "\t"                      6     fh_from_type             SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       41      "\t"                      7     fh_from_id               ""
+8       SQLCHAR       0       2       "\t"                      8     fh_to_type               SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       41      "\t"                      9     fh_to_id                 ""
+10      SQLCHAR       0       250     "\t"                      10    fh_notes                 SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       24      "\t"                      11    fh_actual_date           ""
+12      SQLCHAR       0       100     "\t"                      12    fh_computer              SQL_Latin1_General_CP1256_CI_AS
+13      SQLCHAR       0       41      "\t"                      13    fh_actual_cashier_id     ""
+14      SQLCHAR       0       12      "\t"                      14    fh_form_type             ""
+15      SQLCHAR       0       50      "\t"                      15    sec_insert_uid           SQL_Latin1_General_CP1256_CI_AS
+16      SQLCHAR       0       24      "\t"                      16    sec_insert_date          ""
+17      SQLCHAR       0       50      "\t"                      17    sec_update_uid           SQL_Latin1_General_CP1256_CI_AS
+18      SQLCHAR       0       24      "\t"                      18    sec_update_date          ""
+19      SQLCHAR       0       41      "\t"                      19    fh_sto_id                ""
+20      SQLCHAR       0       12      "\r\n"                    20    fh_cost_sto_id           ""

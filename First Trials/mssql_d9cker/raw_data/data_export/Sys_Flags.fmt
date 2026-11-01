@@ -1,0 +1,7 @@
+8.0
+5
+1       SQLCHAR       0       41      "\t"                      1     sf_id          ""
+2       SQLCHAR       0       41      "\t"                      2     sf_cat         ""
+3       SQLCHAR       0       2       "\t"                      3     sf_flag        SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       50      "\t"                      4     sf_name_ar     SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       50      "\r\n"                    5     sf_name_en     SQL_Latin1_General_CP1256_CI_AS

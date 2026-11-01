@@ -1,0 +1,14 @@
+8.0
+12
+1       SQLCHAR       0       41      "\t"                      1     te_id               ""
+2       SQLCHAR       0       41      "\t"                      2     te_th_id            ""
+3       SQLCHAR       0       50      "\t"                      3     te_field_name       SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       12      "\t"                      4     te_line_No          ""
+5       SQLCHAR       0       12      "\t"                      5     te_cell_No          ""
+6       SQLCHAR       0       12      "\t"                      6     te_digits_No        ""
+7       SQLCHAR       0       12      "\t"                      7     te_spaces_No        ""
+8       SQLCHAR       0       12      "\t"                      8     te_size             ""
+9       SQLCHAR       0       50      "\t"                      9     sec_insert_uid      SQL_Latin1_General_CP1256_CI_AS
+10      SQLCHAR       0       24      "\t"                      10    sec_insert_date     ""
+11      SQLCHAR       0       50      "\t"                      11    sec_update_uid      SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       24      "\r\n"                    12    sec_update_date     ""

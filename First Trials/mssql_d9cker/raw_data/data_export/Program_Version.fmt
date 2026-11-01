@@ -1,0 +1,6 @@
+8.0
+4
+1       SQLCHAR       0       41      "\t"                      1     pv_id            ""
+2       SQLCHAR       0       8000    "\t"                      2     pv_key           SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       8000    "\t"                      3     pv_parameter     SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       8000    "\r\n"                    4     pv_version       SQL_Latin1_General_CP1256_CI_AS

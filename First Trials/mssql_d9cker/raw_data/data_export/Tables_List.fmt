@@ -1,0 +1,5 @@
+8.0
+3
+1       SQLCHAR       0       41      "\t"                      1     id            ""
+2       SQLCHAR       0       50      "\t"                      2     table_nm      SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       50      "\r\n"                    3     column_nm     SQL_Latin1_General_CP1256_CI_AS

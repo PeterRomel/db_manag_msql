@@ -1,0 +1,14 @@
+8.0
+12
+1       SQLCHAR       0       41      "\t"                      1     reb_id               ""
+2       SQLCHAR       0       24      "\t"                      2     reb_start            ""
+3       SQLCHAR       0       24      "\t"                      3     reb_end              ""
+4       SQLCHAR       0       50      "\t"                      4     status               SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       50      "\t"                      5     sto_frm              SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       50      "\t"                      6     sto_to               SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       50      "\t"                      7     sto_to_ip            SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       41      "\t"                      8     sto_start_rep_id     ""
+9       SQLCHAR       0       41      "\t"                      9     sto_end_rep_id       ""
+10      SQLCHAR       0       50      "\t"                      10    rep_version          SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       100     "\t"                      11    rep_pc_name          SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       7       "\r\n"                    12    sto_to_id            ""

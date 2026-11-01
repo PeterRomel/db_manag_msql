@@ -1,0 +1,9 @@
+8.0
+7
+1       SQLCHAR       0       41      "\t"                      1     fbs_id             ""
+2       SQLCHAR       0       50      "\t"                      2     fbs_code           SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       50      "\t"                      3     fbs_type           SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       41      "\t"                      4     fbs_type_id        ""
+5       SQLCHAR       0       41      "\t"                      5     fbs_ac_id          ""
+6       SQLCHAR       0       50      "\t"                      6     fbs_method         SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       100     "\r\n"                    7     fbc_table_name     SQL_Latin1_General_CP1256_CI_AS

@@ -1,0 +1,34 @@
+8.0
+32
+1       SQLCHAR       0       41      "\t"                      1     ven_id                  ""
+2       SQLCHAR       0       20      "\t"                      2     ven_code                SQL_Latin1_General_CP1256_CI_AS
+3       SQLCHAR       0       50      "\t"                      3     ven_name_ar             SQL_Latin1_General_CP1256_CI_AS
+4       SQLCHAR       0       60      "\t"                      4     ven_name_en             SQL_Latin1_General_CP1256_CI_AS
+5       SQLCHAR       0       20      "\t"                      5     ven_tel                 SQL_Latin1_General_CP1256_CI_AS
+6       SQLCHAR       0       100     "\t"                      6     ven_address             SQL_Latin1_General_CP1256_CI_AS
+7       SQLCHAR       0       60      "\t"                      7     ven_mgr_name            SQL_Latin1_General_CP1256_CI_AS
+8       SQLCHAR       0       60      "\t"                      8     ven_b2b_name            SQL_Latin1_General_CP1256_CI_AS
+9       SQLCHAR       0       41      "\t"                      9     ven_b2b_serial          ""
+10      SQLCHAR       0       50      "\t"                      10    ven_pharm_code          SQL_Latin1_General_CP1256_CI_AS
+11      SQLCHAR       0       20      "\t"                      11    ven_usr_code            SQL_Latin1_General_CP1256_CI_AS
+12      SQLCHAR       0       30      "\t"                      12    ven_max_credit          ""
+13      SQLCHAR       0       30      "\t"                      13    ven_current_credit      ""
+14      SQLCHAR       0       12      "\t"                      14    ven_b2b                 ""
+15      SQLCHAR       0       100     "\t"                      15    ven_b2b_notes           SQL_Latin1_General_CP1256_CI_AS
+16      SQLCHAR       0       41      "\t"                      16    ven_cash_disc           ""
+17      SQLCHAR       0       12      "\t"                      17    ven_return_interval     ""
+18      SQLCHAR       0       1       "\t"                      18    ven_active              SQL_Latin1_General_CP1256_CI_AS
+19      SQLCHAR       0       12      "\t"                      19    ven_min_expire          ""
+20      SQLCHAR       0       41      "\t"                      20    ven_cust_id             ""
+21      SQLCHAR       0       50      "\t"                      21    sec_insert_uid          SQL_Latin1_General_CP1256_CI_AS
+22      SQLCHAR       0       24      "\t"                      22    sec_insert_date         ""
+23      SQLCHAR       0       50      "\t"                      23    sec_update_uid          SQL_Latin1_General_CP1256_CI_AS
+24      SQLCHAR       0       24      "\t"                      24    sec_update_date         ""
+25      SQLCHAR       0       0       "\t"                      25    ven_b2b_adv             SQL_Latin1_General_CP1256_CI_AS
+26      SQLCHAR       0       0       "\t"                      26    ven_b2b_adv2            ""
+27      SQLCHAR       0       30      "\t"                      27    ven_start_credit        ""
+28      SQLCHAR       0       30      "\t"                      28    ven_start_debit         ""
+29      SQLCHAR       0       41      "\t"                      29    ven_source_tax          ""
+30      SQLCHAR       0       41      "\t"                      30    ven_parent_ven_id       ""
+31      SQLCHAR       0       7       "\t"                      31    ven_max_warning         ""
+32      SQLCHAR       0       20      "\r\n"                    32    ven_gln_code            SQL_Latin1_General_CP1256_CI_AS

@@ -1,0 +1,10 @@
+8.0
+8
+1       SQLCHAR       0       41      "\t"                      1     sc_cobon_id         ""
+2       SQLCHAR       0       41      "\t"                      2     sth_id              ""
+3       SQLCHAR       0       30      "\t"                      3     sc_value            ""
+4       SQLCHAR       0       41      "\t"                      4     sec_insert_uid      ""
+5       SQLCHAR       0       24      "\t"                      5     sec_insert_date     ""
+6       SQLCHAR       0       41      "\t"                      6     sec_update_uid      ""
+7       SQLCHAR       0       24      "\t"                      7     sec_update_date     ""
+8       SQLCHAR       0       30      "\r\n"                    8     sc_used_value       ""
